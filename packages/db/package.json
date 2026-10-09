@@ -1,0 +1,37 @@
+{
+  "name": "@food-del/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Postgres schema (Drizzle), migrations, seeds and test helpers.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts",
+    "./testing": "./src/testing.ts",
+    "./seed": "./src/seed/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "generate": "drizzle-kit generate",
+    "migrate": "tsx src/cli/migrate.ts",
+    "seed": "tsx src/cli/seed.ts",
+    "reset": "tsx src/cli/reset.ts",
+    "studio": "drizzle-kit studio",
+    "import:pincodes": "tsx src/cli/import-pincodes.ts"
+  },
+  "dependencies": {
+    "@food-del/domain": "workspace:*",
+    "drizzle-orm": "catalog:",
+    "postgres": "catalog:"
+  },
+  "devDependencies": {
+    "@food-del/config": "workspace:*",
+    "@types/node": "catalog:",
+    "dotenv": "catalog:",
+    "drizzle-kit": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
