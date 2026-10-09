@@ -5,7 +5,7 @@ import { freshPhone, signIn } from "./helpers";
 const OPS_PHONE = "9900000002";
 const DELHI_KITCHEN_PHONE = "9900000105";
 
-async function placePaidOrder(page: Page): Promise<string> {
+async function placePaidOrder(page: Page): Promise<{ orderNumber: string; dispatch: string }> {
   await page
     .context()
     .addCookies([{ name: "fd_pin", value: "560038", url: "http://localhost:3000" }]);
@@ -21,12 +21,19 @@ async function placePaidOrder(page: Page): Promise<string> {
   await expect(page.getByText("Order confirmed — thank you!")).toBeVisible();
   const orderNumber = (await page.locator("p.tabular").first().textContent())?.trim();
   expect(orderNumber).toMatch(/^FD-\d{6}-[0-9A-Z]{5}$/);
-  return orderNumber!;
+  // Which day the kitchen dispatches it depends on the time of day the test runs.
+  const plan = await page
+    .getByText(/· dispatch \w{3}, \d{1,2} \w{3}/)
+    .first()
+    .textContent();
+  const dispatch = plan?.match(/dispatch (\w{3}, \d{1,2} \w{3})/)?.[1];
+  expect(dispatch).toBeTruthy();
+  return { orderNumber: orderNumber!, dispatch: dispatch! };
 }
 
 test("kitchen and ops take an order from payment to doorstep", async ({ browser }) => {
   const customer = await browser.newPage();
-  const orderNumber = await placePaidOrder(customer);
+  const { orderNumber, dispatch } = await placePaidOrder(customer);
   const orderUrl = customer.url().replace(/\?.*$/, "");
 
   // Ops locks the parcel into the kitchen's batch (normally the cutoff job does this).
@@ -46,11 +53,7 @@ test("kitchen and ops take an order from payment to doorstep", async ({ browser 
   await kitchen.goto("/vendor");
   await signIn(kitchen, DELHI_KITCHEN_PHONE);
   await expect(kitchen.getByRole("heading", { name: "Chandni Chowk Halwai & Sons" })).toBeVisible();
-  await kitchen
-    .getByRole("link")
-    .filter({ hasText: /[1-9]\d* parcels? ·/ })
-    .first()
-    .click();
+  await kitchen.getByRole("link").filter({ hasText: dispatch }).first().click();
   await expect(kitchen.getByRole("heading", { name: "Production sheet" })).toBeVisible();
   const parcel = kitchen.getByRole("listitem").filter({ hasText: orderNumber });
   await parcel.getByRole("button", { name: "Mark packed" }).click();
