@@ -1,4 +1,5 @@
 import type {
+  AddKitchenMemberRequest,
   Address,
   AddressInput,
   Availability,
@@ -8,15 +9,22 @@ import type {
   Category,
   City,
   Claim,
+  CreateCityRequest,
   CreateClaimRequest,
+  CreateKitchenRequest,
+  DirectoryDistrict,
   InventoryGrid,
   InventoryUpdateRequest,
+  ItemAdminDetail,
   ItemCard,
   ItemDetail,
+  ItemInput,
   ItemListQuery,
   JobName,
   JobResult,
+  KitchenDetail,
   Me,
+  OnboardingOptions,
   OpsCity,
   OpsOverview,
   OpsShipmentRow,
@@ -29,9 +37,15 @@ import type {
   PlaceOrderResponse,
   Quote,
   QuoteRequest,
+  ReachPreview,
+  ReachPreviewRequest,
   ResolveClaimRequest,
+  Route,
+  RouteInput,
   Session,
+  SetItemStatusRequest,
   UpdateCityRequest,
+  UpdateKitchenRequest,
   UpdateVendorRequest,
   VendorDay,
   VendorDetail,
@@ -187,6 +201,30 @@ export function createApiClient(options: ApiClientOptions) {
     updateVendor: (id: string, patch: UpdateVendorRequest) =>
       request<OpsVendor[]>("PATCH", `/v1/ops/vendors/${id}`, { body: patch }),
     runJob: (job: JobName) => post<JobResult>(`/v1/jobs/${job}`),
+
+    // Onboarding (ops)
+    onboardingOptions: () => get<OnboardingOptions>("/v1/ops/onboarding/options"),
+    createKitchen: (body: CreateKitchenRequest) => post<KitchenDetail>("/v1/ops/kitchens", body),
+    kitchen: (id: string) => get<KitchenDetail>(`/v1/ops/kitchens/${id}`),
+    updateKitchen: (id: string, patch: UpdateKitchenRequest) =>
+      request<KitchenDetail>("PATCH", `/v1/ops/kitchens/${id}`, { body: patch }),
+    addKitchenMember: (id: string, body: AddKitchenMemberRequest) =>
+      post<KitchenDetail>(`/v1/ops/kitchens/${id}/members`, body),
+    createItem: (kitchenId: string, body: ItemInput) =>
+      post<ItemAdminDetail>(`/v1/ops/kitchens/${kitchenId}/items`, body),
+    reachPreview: (kitchenId: string, body: ReachPreviewRequest) =>
+      post<ReachPreview>(`/v1/ops/kitchens/${kitchenId}/reach-preview`, body),
+    adminItem: (id: string) => get<ItemAdminDetail>(`/v1/ops/items/${id}`),
+    updateItem: (id: string, body: ItemInput) =>
+      request<ItemAdminDetail>("PUT", `/v1/ops/items/${id}`, { body }),
+    setItemStatus: (id: string, body: SetItemStatusRequest) =>
+      post<ItemAdminDetail>(`/v1/ops/items/${id}/status`, body),
+    routes: (filter: { originCityId?: string; destinationCityId?: string } = {}) =>
+      get<Route[]>("/v1/ops/routes", filter),
+    saveRoute: (body: RouteInput) => request<Route>("PUT", "/v1/ops/routes", { body }),
+    directoryDistricts: (stateCode?: string) =>
+      get<DirectoryDistrict[]>("/v1/ops/directory/districts", { stateCode }),
+    createCity: (body: CreateCityRequest) => post<OpsCity[]>("/v1/ops/cities", body),
 
     // Development tools (only mounted when enabled on the server)
     devPay: (orderId: string) => post<OrderDetail>(`/v1/dev/orders/${orderId}/pay`),

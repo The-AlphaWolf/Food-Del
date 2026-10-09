@@ -8,6 +8,7 @@ import { type ApiConfig, type ApiEnv, DEFAULT_API_CONFIG } from "./env";
 import { onError, problem } from "./errors";
 import { registerAccountRoutes } from "./routes/account";
 import { registerDevRoutes } from "./routes/dev";
+import { registerOnboardingRoutes } from "./routes/onboarding";
 import { registerOpsRoutes } from "./routes/ops";
 import { registerOrderRoutes } from "./routes/orders";
 import { registerPublicRoutes } from "./routes/public";
@@ -49,6 +50,7 @@ export function createApi(core: Core, input: Partial<ApiConfig> & Pick<ApiConfig
   registerOrderRoutes(app);
   registerVendorRoutes(app);
   registerOpsRoutes(app);
+  registerOnboardingRoutes(app);
   registerWebhookRoutes(app, config);
   if (config.devTools) registerDevRoutes(app);
 

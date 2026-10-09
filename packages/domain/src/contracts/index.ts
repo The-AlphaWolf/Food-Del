@@ -5,6 +5,7 @@
 export * from "./account";
 export * from "./catalog";
 export * from "./common";
+export * from "./onboarding";
 export * from "./ops";
 export * from "./orders";
 export * from "./serviceability";

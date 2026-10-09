@@ -1,4 +1,4 @@
-import { schema } from "@food-del/db";
+import { materializeInventorySlots, schema } from "@food-del/db";
 import {
   addDays,
   hoursBetween,
@@ -24,6 +24,7 @@ import { invalid, notFound } from "../errors";
 import { iso, isoOrNull } from "../mappers";
 import { invalidateReference } from "../planning";
 import { requireStaff, type Viewer } from "../viewer";
+import { assertKitchenReady } from "./onboarding";
 import { createRefund, shipmentChargePaise } from "./orders";
 import { enqueue, transitionShipment } from "./shipments";
 
@@ -377,12 +378,16 @@ export class OpsService {
     patch: UpdateVendorRequest,
   ): Promise<OpsVendor[]> {
     requireStaff(viewer);
-    const updated = await this.db
-      .update(vendors)
-      .set(patch)
-      .where(eq(vendors.id, id))
-      .returning({ id: vendors.id });
-    if (updated.length === 0) throw notFound("Kitchen");
+    const [current] = await this.db
+      .select({ status: vendors.status })
+      .from(vendors)
+      .where(eq(vendors.id, id));
+    if (!current) throw notFound("Kitchen");
+    const goingLive = patch.status === "ACTIVE" && current.status !== "ACTIVE";
+    if (goingLive) await assertKitchenReady(this.db, id, istDateOf(this.deps.clock()));
+    await this.db.update(vendors).set(patch).where(eq(vendors.id, id));
+    // A kitchen going live opens its order book for the coming weeks.
+    if (goingLive) await materializeInventorySlots(this.db, { days: 30, now: this.deps.clock() });
     return this.vendors(viewer);
   }
 

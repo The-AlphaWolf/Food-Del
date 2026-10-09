@@ -4,11 +4,14 @@ import type {
   Availability,
   ItemCard,
   ItemDetail,
+  KitchenDetail,
   Me,
+  OnboardingOptions,
   OrderDetail,
   PlaceOrderResponse,
   Problem,
   Quote,
+  Route,
   VendorDay,
 } from "@food-del/domain/contracts";
 import { FAKE_CARRIER_TOKEN, FakeCarrier, FakePaymentProvider } from "@food-del/integrations";
@@ -243,6 +246,93 @@ describe("operations", () => {
   });
 });
 
+describe("onboarding", () => {
+  it("creates a kitchen, validates input and gates go-live over HTTP", async () => {
+    const options = await h.call<OnboardingOptions>("GET", "/v1/ops/onboarding/options", {
+      token: customerToken,
+    });
+    expect(options.status).toBe(403);
+    const opsToken = await h.login(DEV_OPS.phone);
+    const { body: opts } = await h.call<OnboardingOptions>("GET", "/v1/ops/onboarding/options", {
+      token: opsToken,
+    });
+    const kolkata = opts.cities.find((c) => c.slug === "kolkata")!;
+
+    const bad = await h.call<Problem>("POST", "/v1/ops/kitchens", {
+      token: opsToken,
+      body: { name: "X", cityId: kolkata.id, fssaiLicenseNo: "123" },
+    });
+    expect(bad.status).toBe(422);
+    expect(bad.headers.get("content-type")).toContain("application/problem+json");
+
+    const created = await h.call<KitchenDetail>("POST", "/v1/ops/kitchens", {
+      token: opsToken,
+      body: {
+        name: "Girish Chandra Dey & Nakur Chandra Nandy",
+        cityId: kolkata.id,
+        pickupPincode: "700006",
+        pickupAddress: {
+          line1: "56, Ramdulal Sarkar Street",
+          contactName: "Desk",
+          contactPhone: "9830012345",
+        },
+        fssaiLicenseNo: "12819000000456",
+        fssaiValidUntil: "2028-06-30",
+        orderCutoffLocal: "18:00",
+        prepLeadDays: 1,
+        prepStartLocal: "06:00",
+        readyForPickupLocal: "12:00",
+        dispatchWeekdays: 63,
+        dailyShipmentCap: 40,
+        commissionBps: 2000,
+        owner: { name: "Owner", phone: "9830098300" },
+      },
+    });
+    expect(created.status).toBe(201);
+    expect(created.body).toMatchObject({
+      slug: "girish-chandra-dey-and-nakur-chandra-nandy",
+      status: "ONBOARDING",
+    });
+
+    // A malformed id is the caller's mistake (422), never a database error (500).
+    const malformed = await h.call<Problem>("GET", "/v1/ops/kitchens/not-a-uuid", {
+      token: opsToken,
+    });
+    expect(malformed.status).toBe(422);
+
+    const live = await h.call<Problem>("PATCH", `/v1/ops/vendors/${created.body.id}`, {
+      token: opsToken,
+      body: { status: "ACTIVE" },
+    });
+    expect(live.status).toBe(409);
+    expect(live.body.code).toBe("KITCHEN_NOT_READY");
+
+    const sameCity = await h.call<Problem>("PUT", "/v1/ops/routes", {
+      token: opsToken,
+      body: {
+        originCityId: kolkata.id,
+        destinationCityId: kolkata.id,
+        carrierCode: "bluedart",
+        mode: "AIR_EXPRESS",
+        transitHoursP50: 24,
+        transitHoursP90: 20,
+        pickupCutoffLocal: "15:00",
+        deliversSunday: false,
+        acceptsDryIce: false,
+        rateZone: "METRO",
+        isActive: true,
+      },
+    });
+    expect(sameCity.status).toBe(422);
+    const routes = await h.call<Route[]>("GET", `/v1/ops/routes?originCityId=${kolkata.id}`, {
+      token: opsToken,
+    });
+    expect(routes.status).toBe(200);
+    expect(routes.body.length).toBeGreaterThan(0);
+    expect(routes.body.every((r) => r.origin.slug === "kolkata")).toBe(true);
+  });
+});
+
 describe("OpenAPI", () => {
   it("documents the contract with named components", async () => {
     const r = await h.call<{
@@ -254,7 +344,7 @@ describe("OpenAPI", () => {
       expect.arrayContaining(["/api/v1/quotes", "/api/v1/orders", "/api/v1/availability"]),
     );
     expect(Object.keys(r.body.components.schemas)).toEqual(
-      expect.arrayContaining(["Quote", "OrderDetail", "ItemCard"]),
+      expect.arrayContaining(["Quote", "OrderDetail", "ItemCard", "KitchenDetail", "Route"]),
     );
   });
 

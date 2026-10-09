@@ -1,6 +1,7 @@
 export * from "./catalog";
 export * from "./geo";
 export * from "./money";
+export * from "./onboarding";
 export * from "./order-state";
 export * from "./packaging";
 export * from "./pricing";

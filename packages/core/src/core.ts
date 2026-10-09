@@ -7,6 +7,7 @@ import { CatalogService } from "./services/catalog";
 import { ClaimService } from "./services/claims";
 import { FulfilmentService } from "./services/fulfilment";
 import { NotificationService } from "./services/notifications";
+import { OnboardingService } from "./services/onboarding";
 import { OpsService } from "./services/ops";
 import { OrderService } from "./services/orders";
 import { OutboxProcessor } from "./services/outbox";
@@ -43,6 +44,7 @@ export function createCore(deps: CoreDeps) {
     tracking,
     claims: new ClaimService(deps),
     ops: new OpsService(deps),
+    onboarding: new OnboardingService(deps),
     notifications,
     outbox,
     /** Liveness plus a database round-trip. */

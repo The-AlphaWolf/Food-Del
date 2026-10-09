@@ -1,7 +1,7 @@
 import { schema } from "@food-del/db";
 import { normaliseIndianMobile } from "@food-del/domain";
 import type { Address, AddressInput, Me } from "@food-del/domain/contracts";
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, ne } from "drizzle-orm";
 import type { CoreDeps } from "../deps";
 import { invalid, notFound } from "../errors";
 import { loadDestination } from "../planning";
@@ -37,14 +37,39 @@ export class AccountService {
     phone?: string | null;
     email?: string | null;
   }): Promise<void> {
-    await this.deps.db
-      .insert(profiles)
-      .values({
-        id: input.id,
-        phone: input.phone ? normaliseIndianMobile(input.phone) : null,
-        email: input.email ?? null,
-      })
-      .onConflictDoNothing({ target: profiles.id });
+    const phone = input.phone ? normaliseIndianMobile(input.phone) : null;
+    await this.deps.db.transaction(async (tx) => {
+      const [self] = await tx
+        .select({ id: profiles.id })
+        .from(profiles)
+        .where(eq(profiles.id, input.id));
+      if (self) return;
+      // Ops may have invited this number (a kitchen owner) before they ever signed in: the
+      // invitation's roles move to the real account and the placeholder gives up the number.
+      const [invite] = phone
+        ? await tx
+            .select()
+            .from(profiles)
+            .where(and(eq(profiles.phone, phone), ne(profiles.id, input.id)))
+            .for("update")
+        : [];
+      if (invite) await tx.update(profiles).set({ phone: null }).where(eq(profiles.id, invite.id));
+      await tx
+        .insert(profiles)
+        .values({
+          id: input.id,
+          phone,
+          email: input.email ?? null,
+          fullName: invite?.fullName ?? null,
+        })
+        .onConflictDoNothing({ target: profiles.id });
+      if (invite) {
+        await tx
+          .update(memberships)
+          .set({ userId: input.id })
+          .where(eq(memberships.userId, invite.id));
+      }
+    });
   }
 
   /** Development login: find or create the profile for a phone number. */
