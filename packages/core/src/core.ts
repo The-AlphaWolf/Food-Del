@@ -1,5 +1,6 @@
 import { materializeInventorySlots } from "@food-del/db";
 import type { JobName, JobResult } from "@food-del/domain/contracts";
+import { sql } from "drizzle-orm";
 import type { CoreDeps } from "./deps";
 import { AccountService } from "./services/accounts";
 import { CatalogService } from "./services/catalog";
@@ -43,6 +44,11 @@ export function createCore(deps: CoreDeps) {
     ops: new OpsService(deps),
     notifications,
     outbox,
+    /** Liveness plus a database round-trip. */
+    async health(): Promise<{ ok: true; time: string }> {
+      await deps.db.execute(sql`select 1`);
+      return { ok: true, time: deps.clock().toISOString() };
+    },
     async runJob(job: JobName): Promise<JobResult> {
       const processed = await jobs[job]();
       return { job, processed };

@@ -16,9 +16,30 @@ export function testDatabaseUrl(): string {
   return url;
 }
 
+/**
+ * Each package gets its own database (`<test db>_<package>`) so turbo can run suites in
+ * parallel without one package dropping another's schema mid-test.
+ */
+async function packageDatabaseUrl(): Promise<string> {
+  const base = new URL(testDatabaseUrl());
+  const pkg = (process.env.npm_package_name ?? "default")
+    .replace(/^@food-del\//, "")
+    .replace(/\W+/g, "_");
+  const name = `${base.pathname.slice(1)}_${pkg}`;
+  const admin = createDb(base.toString(), { max: 1 });
+  try {
+    const exists = await admin.db.execute(sql`select 1 from pg_database where datname = ${name}`);
+    if (exists.length === 0) await admin.db.execute(sql.raw(`create database "${name}"`));
+  } finally {
+    await admin.close();
+  }
+  base.pathname = `/${name}`;
+  return base.toString();
+}
+
 /** Fresh schema with migrations applied. */
 export async function createTestDb(options: { max?: number } = {}): Promise<DbHandle> {
-  const handle = createDb(testDatabaseUrl(), { max: options.max ?? 10 });
+  const handle = createDb(await packageDatabaseUrl(), { max: options.max ?? 10 });
   await handle.db.execute(sql`drop schema if exists public cascade`);
   await handle.db.execute(sql`drop schema if exists drizzle cascade`);
   await handle.db.execute(sql`create schema public`);

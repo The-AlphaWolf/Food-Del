@@ -1,0 +1,4 @@
+{
+  "extends": "@food-del/config/tsconfig.base.json",
+  "include": ["src", "test", "scripts", "vitest.config.ts"]
+}
