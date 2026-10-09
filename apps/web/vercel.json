@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": ["bom1"],
+  "crons": [
+    { "path": "/api/v1/jobs/process-outbox", "schedule": "* * * * *" },
+    { "path": "/api/v1/jobs/expire-holds", "schedule": "*/5 * * * *" },
+    { "path": "/api/v1/jobs/lock-batches", "schedule": "*/5 * * * *" },
+    { "path": "/api/v1/jobs/monitor-at-risk", "schedule": "*/15 * * * *" },
+    { "path": "/api/v1/jobs/release-payouts", "schedule": "7 * * * *" },
+    { "path": "/api/v1/jobs/materialize-slots", "schedule": "30 19 * * *" }
+  ]
+}

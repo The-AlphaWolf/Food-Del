@@ -1,0 +1,75 @@
+@import "tailwindcss";
+@import "../../../../packages/design-tokens/src/theme.css";
+
+@layer base {
+  html {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    min-height: 100dvh;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  a[href],
+  summary,
+  label[for] {
+    cursor: pointer;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  ::selection {
+    background: var(--color-saffron-soft);
+  }
+  dialog::backdrop {
+    background: rgb(42 22 9 / 0.45);
+  }
+  /* biome-ignore-start lint/complexity/noImportantStyles: reduced motion must beat every component's animation */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+  /* biome-ignore-end lint/complexity/noImportantStyles: reduced motion must beat every component's animation */
+}
+
+@utility container-page {
+  width: 100%;
+  max-width: 75rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+  @media (min-width: 768px) {
+    padding-inline: 1.5rem;
+  }
+}
+
+@utility paper-grain {
+  background-image: radial-gradient(rgb(138 59 12 / 0.05) 1px, transparent 1px);
+  background-size: 14px 14px;
+}

@@ -1,0 +1,47 @@
+{
+  "name": "@food-del/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "jobs:tick": "node scripts/tick.mjs"
+  },
+  "dependencies": {
+    "@fontsource-variable/karla": "5.3.0",
+    "@fontsource-variable/playfair-display": "5.3.0",
+    "@food-del/api": "workspace:*",
+    "@food-del/api-client": "workspace:*",
+    "@food-del/core": "workspace:*",
+    "@food-del/db": "workspace:*",
+    "@food-del/design-tokens": "workspace:*",
+    "@food-del/domain": "workspace:*",
+    "@food-del/integrations": "workspace:*",
+    "@supabase/supabase-js": "2.117.3",
+    "@tanstack/react-query": "catalog:",
+    "clsx": "catalog:",
+    "hono": "catalog:",
+    "lucide-react": "catalog:",
+    "next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "server-only": "catalog:",
+    "tailwind-merge": "catalog:"
+  },
+  "devDependencies": {
+    "@food-del/config": "workspace:*",
+    "@playwright/test": "catalog:",
+    "@tailwindcss/postcss": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
