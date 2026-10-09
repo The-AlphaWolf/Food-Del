@@ -5,7 +5,20 @@ import { useDestination } from "@/lib/destination";
 import { PincodeForm } from "./pincode-picker";
 import { ButtonLink } from "./ui/primitives";
 
-export function HeroPincode({ initial }: { initial: string | null }) {
+function joinNames(names: string[]): string {
+  return names.length <= 1
+    ? (names[0] ?? "")
+    : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
+
+export function HeroPincode({
+  initial,
+  destinations,
+}: {
+  initial: string | null;
+  /** Cities we deliver to now, from live data, so a new launch shows up here by itself. */
+  destinations: string[];
+}) {
   const { pincode } = useDestination();
   const current = pincode ?? initial;
   if (current) {
@@ -21,9 +34,9 @@ export function HeroPincode({ initial }: { initial: string | null }) {
   return (
     <div className="rounded-lg border border-line bg-card p-4 shadow-card">
       <PincodeForm />
-      <p className="mt-2 text-xs text-ink-muted">
-        We deliver to Bengaluru, Chennai, Delhi NCR, Hyderabad, Kolkata, Mumbai and Pune.
-      </p>
+      {destinations.length > 0 && (
+        <p className="mt-2 text-xs text-ink-muted">We deliver to {joinNames(destinations)}.</p>
+      )}
     </div>
   );
 }

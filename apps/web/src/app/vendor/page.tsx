@@ -109,7 +109,7 @@ function Overview() {
                       ) : d.shipments > 0 ? (
                         <Badge tone="saffron">Locked</Badge>
                       ) : (
-                        <Badge>—</Badge>
+                        <Badge>No orders</Badge>
                       )}
                     </div>
                     <p className="tabular flex items-center gap-2 text-sm">

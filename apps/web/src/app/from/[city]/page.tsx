@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ItemGrid } from "@/components/item-card";
+import { PincodePrompt } from "@/components/pincode-prompt";
 import { EmptyState } from "@/components/ui/primitives";
 import { currentPincode, getCore } from "@/server/data";
 
@@ -65,6 +66,7 @@ export default async function CityPage({ params }: Props) {
         </div>
       </section>
       <div className="container-page py-10">
+        <PincodePrompt initial={pincode ?? null} />
         {items.length === 0 ? (
           <EmptyState
             title="Nothing here yet"

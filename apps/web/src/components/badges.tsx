@@ -75,6 +75,8 @@ export function DeliveryPill({
   compact?: boolean;
 }) {
   if (!delivery) {
+    // Lists show one pincode prompt for the whole page instead of repeating it on every card.
+    if (compact) return null;
     return <span className="text-sm text-ink-muted">Set your pincode to see delivery dates</span>;
   }
   if (!delivery.available) {

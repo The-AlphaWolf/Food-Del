@@ -41,6 +41,16 @@ function Tile({
   );
 }
 
+/** What each scheduled job does, in ops language. Vercel Cron runs them; these buttons run one now. */
+const JOB_LABELS: Record<JobName, string> = {
+  "lock-batches": "Lock batches at cutoff",
+  "expire-holds": "Release unpaid holds",
+  "monitor-at-risk": "Check at-risk parcels",
+  "release-payouts": "Release payouts",
+  "materialize-slots": "Open order book",
+  "process-outbox": "Send queued work",
+};
+
 function Overview() {
   const qc = useQueryClient();
   const toast = useToast();
@@ -52,7 +62,7 @@ function Overview() {
   const run = useMutation({
     mutationFn: (job: JobName) => api.runJob(job),
     onSuccess: (r) => {
-      toast("success", `${r.job}: ${r.processed} processed`);
+      toast("success", `${JOB_LABELS[r.job]}: ${r.processed} done`);
       void qc.invalidateQueries({ predicate: (q) => String(q.queryKey[0]).startsWith("ops") });
     },
     onError: (e) => toast("error", (e as Error).message),
@@ -69,7 +79,10 @@ function Overview() {
             </p>
           )}
         </div>
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Run scheduled jobs">
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-labelledby="run-now">
+          <span id="run-now" className="text-xs font-bold uppercase tracking-wider text-ink-muted">
+            Run now
+          </span>
           {JOB_NAMES.map((j) => (
             <Button
               key={j}
@@ -78,7 +91,7 @@ function Overview() {
               loading={run.isPending && run.variables === j}
               onClick={() => run.mutate(j)}
             >
-              <RotateCcw className="size-3.5" aria-hidden /> {j}
+              <RotateCcw className="size-3.5" aria-hidden /> {JOB_LABELS[j]}
             </Button>
           ))}
         </div>
@@ -123,15 +136,23 @@ function Overview() {
               className="mb-6 rounded-md bg-warning-soft p-3 text-sm font-semibold text-warning"
               role="alert"
             >
-              Outbox: {o.counts.outboxPending} pending, {o.counts.outboxFailed} failed. Run
-              process-outbox or check provider credentials.
+              Queued work: {o.counts.outboxPending} waiting, {o.counts.outboxFailed} failed. Run “
+              {JOB_LABELS["process-outbox"]}” or check the payment, courier and messaging keys.
             </p>
           )}
           <Card>
             <h2 className="border-b border-line p-4 font-sans text-lg font-bold">
               Exception queue ({o.exceptions.length})
             </h2>
-            <OpsShipmentsTable rows={o.exceptions} />
+            <OpsShipmentsTable
+              rows={o.exceptions}
+              empty={
+                <p className="flex items-center justify-center gap-2 py-8 text-sm font-semibold text-success">
+                  <CheckCircle2 className="size-5" aria-hidden /> No exceptions — every parcel is on
+                  track.
+                </p>
+              }
+            />
           </Card>
         </>
       )}

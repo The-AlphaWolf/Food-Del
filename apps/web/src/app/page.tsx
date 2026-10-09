@@ -26,6 +26,10 @@ export default async function HomePage() {
     core.catalog.listCategories(),
   ]);
   const origins = cities.filter((c) => c.isOrigin && c.launchStatus === "LIVE");
+  const destinations = cities
+    .filter((c) => c.isDestination && c.launchStatus === "LIVE")
+    .map((c) => c.name)
+    .sort();
 
   return (
     <>
@@ -43,14 +47,18 @@ export default async function HomePage() {
               your order and shipped cold-chain to arrive on the day you choose.
             </p>
             <div className="mt-8 max-w-md">
-              <HeroPincode initial={pincode ?? null} />
+              <HeroPincode initial={pincode ?? null} destinations={destinations} />
             </div>
           </div>
-          <div className="relative mx-auto grid w-full max-w-md grid-cols-2 gap-3" aria-hidden>
+          {/* A slim strip on phones keeps the city list near the top; a staggered grid on wider screens. */}
+          <div
+            className="relative mx-auto grid w-full grid-cols-4 gap-2 md:max-w-md md:grid-cols-2 md:gap-3"
+            aria-hidden
+          >
             {["sandesh", "laddoo", "biscuit", "barfi"].map((art, i) => (
               <div
                 key={art}
-                className={`overflow-hidden rounded-xl border border-line shadow-card ${i % 2 ? "translate-y-6" : ""}`}
+                className={`overflow-hidden rounded-lg border border-line shadow-card md:rounded-xl ${i % 2 ? "md:translate-y-6" : ""}`}
               >
                 <ItemArt
                   art={art}
@@ -63,11 +71,12 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="container-page py-14" aria-labelledby="origins">
-        <SectionHeading eyebrow="Shop by city" title="Where would you like to taste today?" />
-        <h2 id="origins" className="sr-only">
-          Origin cities
-        </h2>
+      <section className="container-page py-12 md:py-14" aria-labelledby="origins">
+        <SectionHeading
+          id="origins"
+          eyebrow="Shop by city"
+          title="Where would you like to taste today?"
+        />
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {origins.map((c) => {
             const look = CITY_ART[c.slug] ?? { art: "laddoo", temp: "AMBIENT" as const };
@@ -102,8 +111,28 @@ export default async function HomePage() {
         </ul>
       </section>
 
-      <section className="container-page pb-14">
+      <section className="container-page pb-12" aria-labelledby="cravings">
         <SectionHeading
+          id="cravings"
+          eyebrow="Or by craving"
+          title="What are you in the mood for?"
+        />
+        <nav aria-label="Categories" className="flex flex-wrap gap-2">
+          {categories.map((c) => (
+            <Link
+              key={c.id}
+              href={`/search?category=${c.slug}`}
+              className="inline-flex min-h-11 items-center rounded-pill border border-line-strong bg-card px-5 text-sm font-semibold transition-colors hover:border-jaggery hover:text-jaggery"
+            >
+              {c.name}
+            </Link>
+          ))}
+        </nav>
+      </section>
+
+      <section className="container-page pb-14" aria-labelledby="featured">
+        <SectionHeading
+          id="featured"
           eyebrow={pincode ? `Delivering to ${pincode}` : "Most loved"}
           title="Delicacies people send home"
           action={
@@ -153,17 +182,6 @@ export default async function HomePage() {
             </div>
           ))}
         </div>
-        <nav aria-label="Categories" className="mt-10 flex flex-wrap gap-2">
-          {categories.map((c) => (
-            <Link
-              key={c.id}
-              href={`/search?category=${c.slug}`}
-              className="rounded-pill border border-line-strong bg-card px-4 py-2 text-sm font-semibold hover:border-jaggery hover:text-jaggery"
-            >
-              {c.name}
-            </Link>
-          ))}
-        </nav>
       </section>
     </>
   );

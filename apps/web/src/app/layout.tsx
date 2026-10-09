@@ -3,6 +3,7 @@ import "@fontsource-variable/playfair-display";
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { MobileTabBar } from "@/components/mobile-tab-bar";
 import { Providers } from "@/components/providers";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -24,6 +25,8 @@ export const viewport: Viewport = {
   themeColor: "#FFF9F0",
   width: "device-width",
   initialScale: 1,
+  // Lets the tab bar sit above the home indicator on notched phones.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -36,6 +39,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             {children}
           </main>
           <SiteFooter />
+          <MobileTabBar />
         </Providers>
       </body>
     </html>

@@ -2,8 +2,11 @@
 
 import { ShoppingBag, UserRound } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCartCount } from "@/lib/cart";
+import { cn } from "@/lib/cn";
 import { useSession } from "@/lib/session";
+import { showsTabBar } from "./mobile-tab-bar";
 import { PincodeButton } from "./pincode-picker";
 
 export function SiteHeader() {
@@ -11,8 +14,10 @@ export function SiteHeader() {
   const { user } = useSession();
   const isVendor = user?.roles.some((r) => r === "VENDOR_OWNER" || r === "VENDOR_STAFF");
   const isOps = user?.roles.some((r) => r === "OPS" || r === "ADMIN");
+  // On phones the tab bar carries account and cart; keep the header to brand and destination.
+  const iconVisibility = showsTabBar(usePathname()) ? "hidden md:flex" : "flex";
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-paper/95 backdrop-blur-[2px]">
+    <header className="sticky top-0 z-40 border-b border-line bg-paper/95 pt-[env(safe-area-inset-top)] backdrop-blur-[2px]">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded focus:bg-card focus:px-3 focus:py-2"
@@ -49,14 +54,20 @@ export function SiteHeader() {
         <PincodeButton />
         <Link
           href={user ? "/account" : "/login"}
-          className="flex size-11 items-center justify-center rounded-md hover:bg-paper-deep"
+          className={cn(
+            iconVisibility,
+            "size-11 items-center justify-center rounded-md hover:bg-paper-deep",
+          )}
           aria-label={user ? "Your account" : "Sign in"}
         >
           <UserRound className="size-5" />
         </Link>
         <Link
           href="/cart"
-          className="relative flex size-11 items-center justify-center rounded-md hover:bg-paper-deep"
+          className={cn(
+            iconVisibility,
+            "relative size-11 items-center justify-center rounded-md hover:bg-paper-deep",
+          )}
           aria-label={`Cart, ${count} item${count === 1 ? "" : "s"}`}
         >
           <ShoppingBag className="size-5" />

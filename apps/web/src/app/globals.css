@@ -3,6 +3,9 @@
 
 @layer base {
   html {
+    /* Keep focused and anchored elements clear of the sticky header and the phone tab bar. */
+    scroll-padding-top: 5rem;
+    scroll-padding-bottom: 5.5rem;
     background-color: var(--color-paper);
     color: var(--color-ink);
     font-family: var(--font-sans);

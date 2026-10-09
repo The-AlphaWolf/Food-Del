@@ -2,6 +2,7 @@ import { DomainError } from "@food-del/core";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ItemGrid } from "@/components/item-card";
+import { PincodePrompt } from "@/components/pincode-prompt";
 import { currentPincode, getCore } from "@/server/data";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +24,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function KitchenPage({ params }: Props) {
-  const v = await load((await params).slug, await currentPincode());
+  const pincode = await currentPincode();
+  const v = await load((await params).slug, pincode);
   return (
     <>
       <section className="paper-grain border-b border-line">
@@ -38,6 +40,7 @@ export default async function KitchenPage({ params }: Props) {
         </div>
       </section>
       <div className="container-page py-10">
+        <PincodePrompt initial={pincode ?? null} />
         <ItemGrid items={v.items} />
       </div>
     </>

@@ -2,6 +2,7 @@ import { Check, Search } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ItemGrid } from "@/components/item-card";
+import { PincodePrompt } from "@/components/pincode-prompt";
 import { EmptyState } from "@/components/ui/primitives";
 import { cn } from "@/lib/cn";
 import { currentPincode, getCore } from "@/server/data";
@@ -82,7 +83,7 @@ export default async function SearchPage({ searchParams }: Props) {
                 href={hrefWith(current, { origin: c.slug })}
                 aria-current={sp.origin === c.slug ? "true" : undefined}
                 className={cn(
-                  "rounded-pill border px-3.5 py-1.5 text-sm font-semibold",
+                  "inline-flex min-h-10 items-center rounded-pill border px-4 text-sm font-semibold",
                   sp.origin === c.slug
                     ? "border-jaggery bg-jaggery text-white"
                     : "border-line-strong bg-card hover:border-jaggery",
@@ -132,6 +133,7 @@ export default async function SearchPage({ searchParams }: Props) {
         )}
       </div>
 
+      <PincodePrompt initial={pincode ?? null} />
       <p className="mb-4 text-sm text-ink-muted" aria-live="polite">
         {shown.length} {shown.length === 1 ? "delicacy" : "delicacies"}
       </p>

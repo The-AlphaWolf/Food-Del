@@ -9,7 +9,7 @@ import {
 } from "@food-del/domain";
 import type { OpsShipmentRow } from "@food-del/domain/contracts";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { api, DEV_TOOLS } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { formatDateTime, formatINR, formatLocalDate } from "@/lib/format";
@@ -110,9 +110,17 @@ function Actions({ row }: { row: OpsShipmentRow }) {
   );
 }
 
-export function OpsShipmentsTable({ rows }: { rows: OpsShipmentRow[] }) {
-  if (rows.length === 0)
-    return <p className="py-6 text-center text-sm text-ink-muted">Nothing here. </p>;
+export function OpsShipmentsTable({
+  rows,
+  empty,
+}: {
+  rows: OpsShipmentRow[];
+  /** What to say when there are no rows. */
+  empty?: ReactNode;
+}) {
+  if (rows.length === 0) {
+    return empty ?? <p className="py-8 text-center text-sm text-ink-muted">No parcels match.</p>;
+  }
   return (
     <div className="overflow-x-auto">
       <table className="tabular w-full min-w-[64rem] text-sm">
