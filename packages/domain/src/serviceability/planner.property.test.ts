@@ -15,7 +15,7 @@ import {
   isWeekdayInMask,
   type LocalDate,
 } from "../time/ist";
-import { deliveryCalendar, planShipment } from "./planner";
+import { deliveryCalendar, evaluateCandidates, planShipment } from "./planner";
 import type { Lane, PlanningContext, ShipmentLine, ShipmentPlan } from "./types";
 
 const hhmmBetween = (minHour: number, maxHour: number) =>
@@ -179,6 +179,27 @@ describe("serviceability invariants", () => {
     expect(planned).toBeGreaterThan(50);
     // ...and exercise the failure paths too.
     expect(reasons.size).toBeGreaterThanOrEqual(5);
+  });
+
+  it("finds the same earliest plan with the early exit as with a full scan", () => {
+    fc.assert(
+      fc.property(scenario, (ctx) => {
+        const r = planShipment(ctx, { kind: "EARLIEST" });
+        const all = evaluateCandidates(ctx).flatMap((o) => (o.plan ? [o.plan] : []));
+        if (!r.ok) {
+          expect(all).toEqual([]);
+          return;
+        }
+        const bestEta = Math.min(...all.map((p) => p.etaP90.getTime()));
+        expect(r.plan.etaP90.getTime()).toBe(bestEta);
+        const sameEta = all.filter((p) => p.etaP90.getTime() === bestEta);
+        expect(sameEta).toContainEqual(r.plan);
+        expect(r.plan.shippingFeePaise + r.plan.packagingFeePaise).toBe(
+          Math.min(...sameEta.map((p) => p.shippingFeePaise + p.packagingFeePaise)),
+        );
+      }),
+      { numRuns: 600 },
+    );
   });
 
   it("never returns a plan that breaks freshness, cold chain, cutoff or capacity", () => {

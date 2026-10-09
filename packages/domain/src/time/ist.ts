@@ -44,14 +44,40 @@ function timeParts(time: LocalTime): [number, number] {
   return [Number(m[1]), Number(m[2])];
 }
 
+/*
+ * Planning converts between dates and instants thousands of times per request, always for the
+ * same few weeks of dates. These pure conversions are memoised (bounded, so a long-running
+ * process can't grow them without limit).
+ */
+const MEMO_LIMIT = 4096;
+const midnightByDate = new Map<LocalDate, number>();
+const dateByDayIndex = new Map<number, LocalDate>();
+
 function utcMidnight(date: LocalDate): number {
-  const [y, m, d] = dateParts(date);
-  return Date.UTC(y, m - 1, d);
+  let t = midnightByDate.get(date);
+  if (t === undefined) {
+    const [y, m, d] = dateParts(date);
+    t = Date.UTC(y, m - 1, d);
+    if (midnightByDate.size >= MEMO_LIMIT) midnightByDate.clear();
+    midnightByDate.set(date, t);
+  }
+  return t;
+}
+
+/** `YYYY-MM-DD` of a UTC day index (days since the epoch). */
+function dateOfDayIndex(day: number): LocalDate {
+  let d = dateByDayIndex.get(day);
+  if (d === undefined) {
+    d = new Date(day * DAY_MS).toISOString().slice(0, 10);
+    if (dateByDayIndex.size >= MEMO_LIMIT) dateByDayIndex.clear();
+    dateByDayIndex.set(day, d);
+  }
+  return d;
 }
 
 /** IST calendar date of an instant. */
 export function istDateOf(instant: Date): LocalDate {
-  return new Date(instant.getTime() + IST_OFFSET_MS).toISOString().slice(0, 10);
+  return dateOfDayIndex(Math.floor((instant.getTime() + IST_OFFSET_MS) / DAY_MS));
 }
 
 /** IST wall-clock time of an instant. */
@@ -66,7 +92,7 @@ export function atIst(date: LocalDate, time: LocalTime): Date {
 }
 
 export function addDays(date: LocalDate, days: number): LocalDate {
-  return new Date(utcMidnight(date) + days * DAY_MS).toISOString().slice(0, 10);
+  return dateOfDayIndex(Math.round(utcMidnight(date) / DAY_MS) + days);
 }
 
 /** Whole days from `from` to `to` (negative when `to` is earlier). */

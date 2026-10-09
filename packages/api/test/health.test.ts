@@ -43,3 +43,13 @@ it("shows ops the job schedule and queue", async () => {
   expect(ops.body.jobs.find((j) => j.job === "process-outbox")?.health).toBe("LATE");
   expect(ops.body.jobs.find((j) => j.job === "housekeeping")?.health).toBe("NEVER_RUN");
 });
+
+it("answers a malformed body with 400, not a server error", async () => {
+  const res = await h.api.request("/api/v1/quotes", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: '{"pincode": "5600',
+  });
+  expect(res.status).toBe(400);
+  expect(((await res.json()) as { code: string }).code).toBe("MALFORMED_REQUEST");
+});

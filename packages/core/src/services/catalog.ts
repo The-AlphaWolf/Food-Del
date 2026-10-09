@@ -145,7 +145,10 @@ export class CatalogService {
       r,
       v: r.variants.reduce((a, b) => (a.pricePaise <= b.pricePaise ? a : b)),
     }));
-    const availability = await loader.availability(cheapest.map((c) => c.v.id));
+    const [availability] = await Promise.all([
+      loader.availability(cheapest.map((c) => c.v.id)),
+      loader.prefetchVendors(list.map((r) => r.vendor.id)),
+    ]);
     const out = new Map<string, DeliverySummary>();
     await Promise.all(
       cheapest.map(async ({ r, v }) => {

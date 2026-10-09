@@ -178,13 +178,20 @@ function choosePackaging(
  * (pickup timing, rates, shelf life, packaging), then calendar, then cutoff, then capacity, so
  * each failure carries the most actionable reason.
  */
-export function evaluateCandidates(ctx: PlanningContext): CandidateOutcome[] {
+export function evaluateCandidates(
+  ctx: PlanningContext,
+  options: { earliestOnly?: boolean } = {},
+): CandidateOutcome[] {
   const today = istDateOf(ctx.now);
   const out: CandidateOutcome[] = [];
   const itemsTotalPaise = ctx.lines.reduce((s, l) => s + l.unitPricePaise * l.quantity, 0);
   const odaHours = ctx.destination.isOda ? ctx.policy.odaExtraHours : 0;
+  let earliestEta = Number.POSITIVE_INFINITY;
 
   for (const dispatchDate of dateRange(today, addDays(today, ctx.policy.horizonDays))) {
+    // A parcel can't arrive before the day it leaves, so once dispatch days pass the earliest
+    // arrival found, nothing later can beat it. Catalogue cards ask this for every item.
+    if (options.earliestOnly && atIst(dispatchDate, "00:00").getTime() > earliestEta) break;
     const packedAt = atIst(dispatchDate, ctx.vendor.readyForPickupLocal);
     const preparedTimes = ctx.lines.map((l) => preparedAtFor(l, ctx, dispatchDate));
     const deliverByAt = ctx.lines
@@ -279,6 +286,7 @@ export function evaluateCandidates(ctx: PlanningContext): CandidateOutcome[] {
         continue;
       }
 
+      earliestEta = Math.min(earliestEta, etaP90.getTime());
       out.push({
         ...base,
         reason: null,
@@ -363,7 +371,7 @@ export function planShipment(ctx: PlanningContext, goal: PlanGoal): PlanResult {
   if (validatePlanningContext(ctx).length > 0) return { ok: false, reason: "INVALID_REQUEST" };
   if (ctx.lanes.length === 0) return { ok: false, reason: "NO_LANE" };
 
-  const outcomes = evaluateCandidates(ctx);
+  const outcomes = evaluateCandidates(ctx, { earliestOnly: goal.kind === "EARLIEST" });
 
   if (goal.kind === "EARLIEST") {
     const plans = outcomes.flatMap((o) => (o.plan ? [o.plan] : []));

@@ -10,7 +10,8 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "openapi": "tsx scripts/openapi.ts"
+    "openapi": "tsx scripts/openapi.ts",
+    "bench": "tsx scripts/bench.ts"
   },
   "dependencies": {
     "@food-del/core": "workspace:*",

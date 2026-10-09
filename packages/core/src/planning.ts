@@ -171,12 +171,31 @@ export function destinationProblem(
   return null;
 }
 
+function vendorRowOf(row: {
+  v: typeof vendors.$inferSelect;
+  c: typeof cities.$inferSelect;
+}): VendorRow {
+  return {
+    id: row.v.id,
+    slug: row.v.slug,
+    name: row.v.name,
+    tagline: row.v.tagline,
+    establishedYear: row.v.establishedYear,
+    cityId: row.v.cityId,
+    citySlug: row.c.slug,
+    cityName: row.c.name,
+    status: row.v.status,
+    schedule: vendorScheduleOf(row.v),
+  };
+}
+
 export class PlanningLoader {
   private readonly vendorCache = new Map<string, Promise<VendorRow>>();
   private readonly laneCache = new Map<string, Promise<Lane[]>>();
   private readonly blackoutCache = new Map<string, Promise<Blackouts>>();
   private readonly bookedCache = new Map<string, Promise<Map<LocalDate, number>>>();
   private readonly destCache = new Map<string, Promise<DestinationInfo | null>>();
+  private blackoutRowsCache: Promise<(typeof calendarBlackouts.$inferSelect)[]> | null = null;
   readonly now: Date;
   readonly today: LocalDate;
   readonly horizonEnd: LocalDate;
@@ -209,22 +228,61 @@ export class PlanningLoader {
         .where(eq(vendors.id, vendorId))
         .then(([row]) => {
           if (!row) throw new Error(`vendor ${vendorId} missing`);
-          return {
-            id: row.v.id,
-            slug: row.v.slug,
-            name: row.v.name,
-            tagline: row.v.tagline,
-            establishedYear: row.v.establishedYear,
-            cityId: row.v.cityId,
-            citySlug: row.c.slug,
-            cityName: row.c.name,
-            status: row.v.status,
-            schedule: vendorScheduleOf(row.v),
-          };
+          return vendorRowOf(row);
         });
       this.vendorCache.set(vendorId, p);
     }
     return p;
+  }
+
+  /**
+   * Load several kitchens and their booked parcels in two queries instead of two per kitchen.
+   * Catalogue pages plan one card per item, often across a dozen kitchens.
+   */
+  prefetchVendors(vendorIds: readonly string[]): Promise<void> {
+    const missing = [...new Set(vendorIds)].filter((id) => !this.vendorCache.has(id));
+    if (missing.length < 2) return Promise.resolve();
+    const rows = this.db
+      .select({ v: vendors, c: cities })
+      .from(vendors)
+      .innerJoin(cities, eq(cities.id, vendors.cityId))
+      .where(inArray(vendors.id, missing));
+    const counts = this.db
+      .select({
+        vendorId: shipments.vendorId,
+        date: shipments.dispatchDate,
+        n: sql<number>`count(*)::int`,
+      })
+      .from(shipments)
+      .where(
+        and(
+          inArray(shipments.vendorId, missing),
+          gte(shipments.dispatchDate, this.today),
+          lte(shipments.dispatchDate, this.horizonEnd),
+          ne(shipments.status, "CANCELLED"),
+        ),
+      )
+      .groupBy(shipments.vendorId, shipments.dispatchDate);
+    const done = Promise.all([rows, counts]);
+    for (const id of missing) {
+      this.vendorCache.set(
+        id,
+        done.then(([rs]) => {
+          const row = rs.find((r) => r.v.id === id);
+          if (!row) throw new Error(`vendor ${id} missing`);
+          return vendorRowOf(row);
+        }),
+      );
+      if (!this.bookedCache.has(id)) {
+        this.bookedCache.set(
+          id,
+          done.then(
+            ([, cs]) => new Map(cs.filter((c) => c.vendorId === id).map((c) => [c.date, c.n])),
+          ),
+        );
+      }
+    }
+    return done.then(() => undefined);
   }
 
   private lanes(originCityId: string, pincode: string): Promise<Lane[]> {
@@ -258,36 +316,42 @@ export class PlanningLoader {
     return p;
   }
 
+  private blackoutRows(): Promise<(typeof calendarBlackouts.$inferSelect)[]> {
+    if (!this.blackoutRowsCache) {
+      // Carrier holidays can push deliveries past the dispatch horizon; look a little further.
+      const until = addDays(this.horizonEnd, 14);
+      this.blackoutRowsCache = this.db
+        .select()
+        .from(calendarBlackouts)
+        .where(and(gte(calendarBlackouts.date, this.today), lte(calendarBlackouts.date, until)));
+    }
+    return this.blackoutRowsCache;
+  }
+
   private blackouts(vendor: VendorRow): Promise<Blackouts> {
     let p = this.blackoutCache.get(vendor.id);
     if (!p) {
-      // Carrier holidays can push deliveries past the dispatch horizon; look a little further.
-      const until = addDays(this.horizonEnd, 14);
-      p = this.db
-        .select()
-        .from(calendarBlackouts)
-        .where(and(gte(calendarBlackouts.date, this.today), lte(calendarBlackouts.date, until)))
-        .then((rows) => {
-          const dispatch = new Set<LocalDate>();
-          const carrier = new Map<string, Set<LocalDate>>();
-          for (const r of rows) {
-            if (
-              r.scope === "NATIONAL" ||
-              (r.scope === "CITY" && r.scopeRef === vendor.cityId) ||
-              (r.scope === "VENDOR" && r.scopeRef === vendor.id)
-            ) {
-              dispatch.add(r.date);
-            } else if (r.scope === "CARRIER") {
-              let set = carrier.get(r.scopeRef);
-              if (!set) {
-                set = new Set();
-                carrier.set(r.scopeRef, set);
-              }
-              set.add(r.date);
+      p = this.blackoutRows().then((rows) => {
+        const dispatch = new Set<LocalDate>();
+        const carrier = new Map<string, Set<LocalDate>>();
+        for (const r of rows) {
+          if (
+            r.scope === "NATIONAL" ||
+            (r.scope === "CITY" && r.scopeRef === vendor.cityId) ||
+            (r.scope === "VENDOR" && r.scopeRef === vendor.id)
+          ) {
+            dispatch.add(r.date);
+          } else if (r.scope === "CARRIER") {
+            let set = carrier.get(r.scopeRef);
+            if (!set) {
+              set = new Set();
+              carrier.set(r.scopeRef, set);
             }
+            set.add(r.date);
           }
-          return { dispatch, carrier };
-        });
+        }
+        return { dispatch, carrier };
+      });
       this.blackoutCache.set(vendor.id, p);
     }
     return p;
