@@ -74,6 +74,8 @@ Playwright uses its own Chromium; to use one already installed, set `PW_CHROMIUM
 
 ## Going live
 
+First deploy (demo on Vercel + Supabase): [`docs/deploy.md`](docs/deploy.md).
+
 Set real providers in the environment (all listed in `.env.example`):
 - `AUTH_MODE=supabase` plus the Supabase keys
 - `PAYMENTS_PROVIDER=razorpay` plus the keys and webhook secret

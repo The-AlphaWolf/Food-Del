@@ -1,0 +1,48 @@
+name: Database
+
+# Apply migrations (and optionally the demo seed) to a hosted database. Run it before the code
+# that needs a migration goes live; see docs/runbooks/deploy-and-rollback.md.
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: GitHub environment whose DATABASE_URL secret to use
+        type: choice
+        options: [production, staging]
+        default: production
+      seed:
+        description: Also load the demo catalogue (skipped if the database already has data)
+        type: boolean
+        default: false
+
+concurrency:
+  group: database-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Migrate ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: ${{ inputs.environment }}
+    env:
+      # Use Supabase's direct connection (port 5432) or session pooler: migrations need a session.
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      TURBO_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Check the secret is set
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::Add a DATABASE_URL secret to the '${{ inputs.environment }}' environment (Settings → Environments)."
+            exit 1
+          fi
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:migrate
+      - if: ${{ inputs.seed }}
+        run: pnpm db:seed
