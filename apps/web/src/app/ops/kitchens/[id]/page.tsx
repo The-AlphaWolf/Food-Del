@@ -328,6 +328,12 @@ function Details({ k }: { k: KitchenDetail }) {
           </div>
         ))}
       </dl>
+      <Link
+        href={`/ops/payouts?kitchen=${k.id}`}
+        className="mt-3 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-jaggery hover:underline"
+      >
+        View payouts <ArrowRight className="size-4" aria-hidden />
+      </Link>
     </Card>
   );
 }

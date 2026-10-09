@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDateTime, relativeHours } from "./format";
+import { formatDateTime, formatINRCompact, relativeHours } from "./format";
 
 describe("formatDateTime", () => {
   it("shows the time in IST whatever the server's zone", () => {
@@ -20,5 +20,14 @@ describe("relativeHours", () => {
   it("speaks in the past for elapsed times and never says zero minutes", () => {
     expect(relativeHours(at(-5), now)).toBe("5 h ago");
     expect(relativeHours(at(0), now)).toBe("in 1 min");
+  });
+});
+
+describe("formatINRCompact", () => {
+  it("keeps amounts under a lakh in full, then uses lakh and crore", () => {
+    expect(formatINRCompact(780_000)).toBe("₹7,800");
+    expect(formatINRCompact(12_500_000)).toBe("₹1.3L");
+    expect(formatINRCompact(428_000_000)).toBe("₹42.8L");
+    expect(formatINRCompact(4_280_000_000)).toBe("₹4.3Cr");
   });
 });

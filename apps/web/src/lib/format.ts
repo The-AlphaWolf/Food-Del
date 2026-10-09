@@ -39,3 +39,17 @@ export function relativeHours(iso: string, now = Date.now()): string {
         : `${Math.round(abs / 24)} days`;
   return h >= 0 ? `in ${text}` : `${text} ago`;
 }
+
+/**
+ * Headline amounts in Indian units: ₹7,800 in full below a lakh, then ₹1.3L and ₹5.2Cr.
+ * Hand-rolled because Intl's compact "en-IN" output differs between runtimes ("K" vs "T").
+ */
+export function formatINRCompact(paise: number): string {
+  const rupees = paise / 100;
+  const abs = Math.abs(rupees);
+  const short = (n: number, unit: string) =>
+    `${rupees < 0 ? "−" : ""}₹${(Math.round((abs / n) * 10) / 10).toLocaleString("en-IN")}${unit}`;
+  if (abs >= 1e7) return short(1e7, "Cr");
+  if (abs >= 1e5) return short(1e5, "L");
+  return formatINR(paise);
+}

@@ -10,6 +10,7 @@ const TABS = [
   { href: "/ops", label: "Overview" },
   { href: "/ops/parcels", label: "Parcels" },
   { href: "/ops/claims", label: "Claims" },
+  { href: "/ops/payouts", label: "Payouts" },
   { href: "/ops/kitchens", label: "Kitchens" },
   { href: "/ops/routes", label: "Routes" },
   { href: "/ops/cities", label: "Cities" },
