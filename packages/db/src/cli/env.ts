@@ -1,4 +1,11 @@
-import "dotenv/config";
+import { fileURLToPath } from "node:url";
+import { config } from "dotenv";
+
+// The repo-root .env shared with the web app (a package-local .env, if any, wins).
+config({
+  path: [".env", fileURLToPath(new URL("../../../../.env", import.meta.url))],
+  quiet: true,
+});
 
 export function databaseUrl(): string {
   const url = process.env.DATABASE_URL;

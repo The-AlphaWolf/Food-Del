@@ -1,5 +1,5 @@
 import { type Executor, schema } from "@food-del/db";
-import { and, asc, eq, lte } from "drizzle-orm";
+import { and, asc, eq, lte, type SQL, sql } from "drizzle-orm";
 import type { CoreDeps } from "../deps";
 import type { FulfilmentService } from "./fulfilment";
 import { type NotificationService, TEMPLATES, type Template } from "./notifications";
@@ -34,13 +34,34 @@ export class OutboxProcessor {
     return processed;
   }
 
-  private async processOne(): Promise<boolean> {
+  /**
+   * Run a parcel's freshly enqueued `topic` messages now rather than on the next cron tick, e.g.
+   * book the courier the moment the kitchen packs so the label can be printed straight away.
+   * Only untried messages are taken, so one in backoff keeps its schedule; a failure here leaves
+   * the message on the normal retry path.
+   */
+  async processFor(topic: OutboxMessage["topic"], shipmentId: string): Promise<number> {
+    let processed = 0;
+    const filter = and(
+      eq(outbox.topic, topic),
+      eq(outbox.attempts, 0),
+      sql`${outbox.payload}->>'shipmentId' = ${shipmentId}`,
+    );
+    while (await this.processOne(filter)) processed++;
+    return processed;
+  }
+
+  private async processOne(filter?: SQL): Promise<boolean> {
     const now = this.deps.clock();
     return this.deps.db.transaction(async (tx) => {
       const [msg] = await tx
         .select()
         .from(outbox)
-        .where(and(eq(outbox.status, "PENDING"), lte(outbox.availableAt, now)))
+        .where(
+          filter
+            ? and(eq(outbox.status, "PENDING"), filter)
+            : and(eq(outbox.status, "PENDING"), lte(outbox.availableAt, now)),
+        )
         .orderBy(asc(outbox.id))
         .limit(1)
         .for("update", { skipLocked: true });

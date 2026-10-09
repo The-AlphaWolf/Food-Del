@@ -265,10 +265,13 @@ describe("full lifecycle: pay → batch → pack → fly → deliver → payout"
       preparedAt: atIst("2026-10-13", "05:00").toISOString(),
     });
     expect(packed.status).toBe("PACKED_COLD_CHAIN");
+    // Booked in the same request, so the kitchen can print the label straight away.
+    expect(packed.awbNumber).toMatch(/^FD\d+/);
+    expect(packed.labelUrl).toContain(packed.awbNumber);
     await t.core.runJob("process-outbox");
     const detail = await t.core.orders.get(customer, orderId);
     awb = detail.shipments[0]!.awbNumber!;
-    expect(awb).toMatch(/^FD\d+/);
+    expect(awb).toBe(packed.awbNumber);
     // Katli: 240 h shelf life − 72 h residual from 05:00 Tue = 05:00 Fri.
     expect(detail.shipments[0]!.deliverByAt).toBe(atIst("2026-10-20", "05:00").toISOString());
     expect(t.carrier.pickups.length).toBeGreaterThan(0);
@@ -443,6 +446,32 @@ describe("kitchen shortfall, risk and claims", () => {
       .from(schema.vendorPayouts)
       .where(eq(schema.vendorPayouts.shipmentId, id));
     expect(payout!.status).toBe("REVERSED");
+  });
+
+  it("still packs when the courier is down, and books on the outbox retry", async () => {
+    t.clock.set(atIst("2026-10-20", "09:00"));
+    const placed = await t.core.orders.place(
+      customer,
+      orderRequest([{ variantId: katliVariant, quantity: 1 }]),
+    );
+    await capture(placed.checkout!.providerOrderId, placed.order.totals.grandTotalPaise);
+    const parcel = placed.order.shipments[0]!;
+    t.clock.set(new Date(new Date(parcel.orderCutoffAt).getTime() + 5 * 60_000));
+    await t.core.runJob("lock-batches");
+    t.clock.set(atIst(parcel.dispatchDate, "11:00"));
+    const book = t.carrier.book.bind(t.carrier);
+    t.carrier.book = () => Promise.reject(new Error("courier API unavailable"));
+    try {
+      const packed = await t.core.fulfilment.markPacked(delhiOwner, parcel.id, {});
+      expect(packed).toMatchObject({ status: "PACKED_COLD_CHAIN", awbNumber: null });
+    } finally {
+      t.carrier.book = book;
+    }
+    // The failed attempt backs off for two minutes before the cron tick retries it.
+    t.clock.set(atIst(parcel.dispatchDate, "11:03"));
+    await t.core.runJob("process-outbox");
+    const detail = await t.core.orders.get(customer, placed.order.id);
+    expect(detail.shipments[0]!.awbNumber).toMatch(/^FD\d+/);
   });
 });
 

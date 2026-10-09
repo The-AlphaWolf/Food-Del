@@ -85,6 +85,8 @@ export const VendorOverviewSchema = z
         shipments: z.number().int(),
         units: z.number().int(),
         cutoffAt: Instant,
+        /** The kitchen doesn't dispatch this day (weekly off or holiday). */
+        closed: z.boolean(),
       }),
     ),
     payouts: z.object({ onHoldPaise: Money, releasedPaise: Money }),

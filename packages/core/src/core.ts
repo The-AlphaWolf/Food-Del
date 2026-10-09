@@ -21,6 +21,7 @@ export function createCore(deps: CoreDeps) {
   const notifications = new NotificationService(deps);
   const orders = new OrderService(deps);
   const outbox = new OutboxProcessor(deps, { fulfilment, tracking, notifications });
+  fulfilment.attachOutbox(outbox);
 
   const jobs: Record<JobName, () => Promise<number>> = {
     "lock-batches": () => fulfilment.lockDueBatches(),

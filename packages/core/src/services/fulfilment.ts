@@ -4,7 +4,9 @@ import {
   addHours,
   atIst,
   dateRange,
+  isoWeekday,
   istDateOf,
+  isWeekdayInMask,
   type LocalDate,
   SHIPMENT_STATUS_LABELS,
   timelinePosition,
@@ -23,9 +25,11 @@ import { iso, vendorSummary } from "../mappers";
 import { loadReference, type VendorRow, vendorScheduleOf } from "../planning";
 import { requireVendorAccess, type Viewer } from "../viewer";
 import { createRefund, shipmentChargePaise } from "./orders";
+import type { OutboxProcessor } from "./outbox";
 import { enqueue, transitionShipment } from "./shipments";
 
 const {
+  calendarBlackouts,
   cities,
   dispatchBatches,
   inventorySlots,
@@ -53,7 +57,14 @@ const BOARD_STATUSES = [
 ] as const;
 
 export class FulfilmentService {
+  private outbox: OutboxProcessor | null = null;
+
   constructor(private readonly deps: CoreDeps) {}
+
+  /** The outbox depends on this service, so it is attached after both are built. */
+  attachOutbox(outbox: OutboxProcessor): void {
+    this.outbox = outbox;
+  }
 
   private get db() {
     return this.deps.db;
@@ -201,6 +212,24 @@ export class FulfilmentService {
       })
       .from(vendorPayouts)
       .where(eq(vendorPayouts.vendorId, vendorId));
+    const blackouts = await this.db
+      .select({
+        date: calendarBlackouts.date,
+        scope: calendarBlackouts.scope,
+        ref: calendarBlackouts.scopeRef,
+      })
+      .from(calendarBlackouts)
+      .where(and(gte(calendarBlackouts.date, today), lte(calendarBlackouts.date, until)));
+    const closedDates = new Set(
+      blackouts
+        .filter(
+          (b) =>
+            b.scope === "NATIONAL" ||
+            (b.scope === "CITY" && b.ref === vendor.cityId) ||
+            (b.scope === "VENDOR" && b.ref === vendor.id),
+        )
+        .map((b) => b.date),
+    );
     return {
       vendor: vendorSummary(vendor),
       upcoming: dateRange(today, until).map((date) => ({
@@ -210,6 +239,9 @@ export class FulfilmentService {
         cutoffAt: iso(
           atIst(addDays(date, -vendor.schedule.prepLeadDays), vendor.schedule.orderCutoffLocal),
         ),
+        closed:
+          !isWeekdayInMask(vendor.schedule.dispatchWeekdays, isoWeekday(date)) ||
+          closedDates.has(date),
       })),
       payouts: { onHoldPaise: payouts?.onHold ?? 0, releasedPaise: payouts?.released ?? 0 },
     };
@@ -389,6 +421,14 @@ export class FulfilmentService {
         now,
       });
       await enqueue(tx, { topic: "carrier.book", payload: { shipmentId } });
+    });
+    // Book now so the kitchen can print the label while the box is on the counter. A courier
+    // failure is logged and left to the outbox's retries; the parcel is packed either way.
+    await this.outbox?.processFor("carrier.book", shipmentId).catch((e: unknown) => {
+      this.deps.logger.warn("immediate courier booking failed", {
+        shipmentId,
+        error: e instanceof Error ? e.message : String(e),
+      });
     });
     return this.loadVendorShipment(shipmentId);
   }
