@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   char,
   index,
@@ -24,7 +25,32 @@ export const profiles = pgTable("profiles", {
   email: text("email"),
   fullName: text("full_name"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  /**
+   * Set when the person deletes their account: contact details are erased, the row stays so
+   * orders (tax records) keep a valid customer reference.
+   */
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
 });
+
+/**
+ * DPDP evidence: when someone was shown which version of the privacy notice, exported their
+ * data or erased their account. Append-only; never holds the personal data itself.
+ */
+export const privacyEvents = pgTable(
+  "privacy_events",
+  {
+    id: bigint("id", { mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id),
+    kind: varchar("kind", { length: 32 })
+      .$type<"NOTICE_ACKNOWLEDGED" | "DATA_EXPORTED" | "ACCOUNT_DELETED">()
+      .notNull(),
+    noticeVersion: text("notice_version"),
+    at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("privacy_events_user_idx").on(t.userId, t.at)],
+);
 
 /** Roles beyond plain customer. Vendor roles are scoped to one vendor. */
 export const memberships = pgTable(

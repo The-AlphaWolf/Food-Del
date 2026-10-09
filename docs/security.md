@@ -16,7 +16,7 @@ What protects Food-Del today, where it lives, and what is still open. Review thi
 | Control | Where |
 |---|---|
 | Cookie sessions are `HttpOnly`, `Secure`, `SameSite=Lax`. Writes that rely on the cookie must come from our own origin (`Origin`/`Sec-Fetch-Site`), otherwise 403 `CROSS_SITE_REQUEST`. | `security.ts` |
-| Rate limits, Postgres-backed so they hold across serverless instances: orders 20/h per user, payments 30/h, claims 10/day, quotes and calendars 120/min per IP, pincode checks 60/min, dev OTP 20 per 15 min. Over the limit: 429 with `Retry-After`. | `security.ts` (`RATE_LIMIT_POLICIES`) |
+| Rate limits, Postgres-backed so they hold across serverless instances: orders 20/h per user, payments 30/h, claims 10/day, quotes and calendars 120/min per IP, pincode checks 60/min, data exports 5/day, dev/demo OTP 100 per 15 min per IP. Over the limit: 429 with `Retry-After`. | `security.ts` (`RATE_LIMIT_POLICIES`) |
 | Idempotency keys on order placement; client-supplied totals checked (`PRICE_CHANGED`) | `packages/core/src/services/orders.ts` |
 | Webhooks: Razorpay HMAC and Shiprocket token compared in constant time; events are idempotent | `packages/integrations` |
 | Scheduled jobs and the dev tick need the cron secret (constant-time compare) or an ops session | `routes/webhooks.ts`, `routes/dev.ts` |

@@ -12,6 +12,7 @@ import type {
   CreateCityRequest,
   CreateClaimRequest,
   CreateKitchenRequest,
+  DataExport,
   DirectoryDistrict,
   HoldPayoutRequest,
   InventoryGrid,
@@ -165,6 +166,9 @@ export function createApiClient(options: ApiClientOptions) {
     addresses: () => get<Address[]>("/v1/me/addresses"),
     addAddress: (input: AddressInput) => post<Address>("/v1/me/addresses", input),
     deleteAddress: (id: string) => request<void>("DELETE", `/v1/me/addresses/${id}`),
+    acknowledgePrivacyNotice: (version: string) => post<Me>("/v1/me/privacy-notice", { version }),
+    exportMyData: () => get<DataExport>("/v1/me/export"),
+    deleteAccount: () => request<void>("DELETE", "/v1/me", { body: { confirm: "DELETE" } }),
 
     // Orders
     placeOrder: (req: PlaceOrderRequest, idempotencyKey: string) =>

@@ -23,6 +23,7 @@ export const errors = {
   404: { ...problemContent, description: "Not found" },
   409: { ...problemContent, description: "Conflict (sold out, cutoff passed, price changed…)" },
   422: { ...problemContent, description: "Invalid input" },
+  429: { ...problemContent, description: "Too many requests (see Retry-After)" },
 } as const;
 
 export const bearer = [{ bearerAuth: [] }];

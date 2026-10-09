@@ -1,7 +1,10 @@
 import { invalid } from "@food-del/core";
 import {
+  AcknowledgeNoticeRequestSchema,
   AddressInputSchema,
   AddressSchema,
+  DataExportSchema,
+  DeleteAccountRequestSchema,
   MeSchema,
   OtpRequestSchema,
   OtpResponseSchema,
@@ -12,7 +15,7 @@ import {
 import { createRoute } from "@hono/zod-openapi";
 import { deleteCookie, setCookie } from "hono/cookie";
 import { z } from "zod";
-import type { TokenService } from "../auth";
+import { deleteSupabaseUser, type TokenService } from "../auth";
 import type { ApiConfig } from "../env";
 import { type App, bearer, body, errors, json } from "./shared";
 
@@ -143,6 +146,71 @@ export function registerAccountRoutes(app: App, tokens: TokenService, config: Ap
     }),
     async (c) => {
       await c.get("core").accounts.deleteAddress(c.get("viewer"), c.req.valid("param").id);
+      return c.body(null, 204);
+    },
+  );
+
+  app.openapi(
+    createRoute({
+      method: "post",
+      path: "/v1/me/privacy-notice",
+      tags,
+      security: bearer,
+      summary: "Record that the person has seen the current privacy notice",
+      request: body(AcknowledgeNoticeRequestSchema),
+      responses: { 200: json(MeSchema), 401: errors[401], 422: errors[422] },
+    }),
+    async (c) => {
+      const core = c.get("core");
+      await core.privacy.acknowledgeNotice(c.get("viewer"), c.req.valid("json").version);
+      return c.json(await core.accounts.me(c.get("viewer")), 200);
+    },
+  );
+
+  app.openapi(
+    createRoute({
+      method: "get",
+      path: "/v1/me/export",
+      tags,
+      security: bearer,
+      summary: "Download everything we hold about you (JSON)",
+      responses: { 200: json(DataExportSchema), 401: errors[401], 429: errors[429] },
+    }),
+    async (c) => {
+      const data = await c.get("core").privacy.export(c.get("viewer"));
+      c.header("Cache-Control", "no-store");
+      c.header(
+        "Content-Disposition",
+        `attachment; filename="food-del-my-data-${data.generatedAt.slice(0, 10)}.json"`,
+      );
+      return c.json(data, 200);
+    },
+  );
+
+  app.openapi(
+    createRoute({
+      method: "delete",
+      path: "/v1/me",
+      tags,
+      security: bearer,
+      summary: "Delete your account",
+      description:
+        "Erases name, phone, email, saved addresses, delivery details, gift messages and claim descriptions. Order and payment amounts are kept (without your details) for tax records. Refused with 409 while an order or claim is in progress, and for kitchen or staff accounts.",
+      request: body(DeleteAccountRequestSchema),
+      responses: {
+        204: { description: "Deleted" },
+        401: errors[401],
+        409: errors[409],
+        422: errors[422],
+      },
+    }),
+    async (c) => {
+      const viewer = c.get("viewer");
+      await c.get("core").privacy.deleteAccount(viewer);
+      if (config.auth.mode === "supabase" && viewer) {
+        await deleteSupabaseUser(config.auth, viewer.userId, c.get("core").deps.logger);
+      }
+      deleteCookie(c, config.sessionCookieName, { path: "/" });
       return c.body(null, 204);
     },
   );

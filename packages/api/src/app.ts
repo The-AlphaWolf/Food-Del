@@ -64,6 +64,7 @@ export function createApi(core: Core, input: Partial<ApiConfig> & Pick<ApiConfig
   app.post("/v1/quotes", rateLimit("planning", limits));
   app.get("/v1/availability", rateLimit("planning", limits));
   app.get("/v1/pincodes/:pincode", rateLimit("pincodes", limits));
+  app.get("/v1/me/export", rateLimit("exports", limits));
   app.notFound((c) => problem(c, 404, "NOT_FOUND", "No such endpoint."));
 
   registerPublicRoutes(app);

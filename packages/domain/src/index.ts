@@ -6,5 +6,6 @@ export * from "./order-state";
 export * from "./packaging";
 export * from "./payouts";
 export * from "./pricing";
+export * from "./privacy";
 export * from "./serviceability";
 export * from "./time/ist";

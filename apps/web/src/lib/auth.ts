@@ -1,6 +1,6 @@
 "use client";
 
-import { normaliseIndianMobile } from "@food-del/domain";
+import { normaliseIndianMobile, PRIVACY_NOTICE_VERSION } from "@food-del/domain";
 import type { Me } from "@food-del/domain/contracts";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { AUTH_MODE, api } from "./api";
@@ -48,14 +48,16 @@ export async function finishPhoneLogin(phoneRaw: string, code: string): Promise<
       email: null,
       roles: ["CUSTOMER"],
       vendors: [],
+      privacyNoticeAcknowledged: null,
     });
-    const me = await api.me();
-    session.setUser(me);
-    return me;
+  } else {
+    const s = await api.verifyOtp(phone, code);
+    session.set(s.token, s.user);
   }
-  const s = await api.verifyOtp(phone, code);
-  session.set(s.token, s.user);
-  return s.user;
+  // The sign-in form shows the privacy notice; record that this person has seen this version.
+  const me = await api.acknowledgePrivacyNotice(PRIVACY_NOTICE_VERSION);
+  session.setUser(me);
+  return me;
 }
 
 export async function logout(): Promise<void> {

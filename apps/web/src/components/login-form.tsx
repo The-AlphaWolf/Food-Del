@@ -1,8 +1,11 @@
 "use client";
 
 import { ApiError } from "@food-del/api-client";
+import { queryKeys } from "@food-del/api-client/react";
 import type { Me } from "@food-del/domain/contracts";
+import { useQueryClient } from "@tanstack/react-query";
 import { Info } from "lucide-react";
+import Link from "next/link";
 import { useId, useState } from "react";
 import { finishPhoneLogin, startPhoneLogin } from "@/lib/auth";
 import { Button, Field, Input } from "./ui/primitives";
@@ -27,6 +30,7 @@ export function LoginForm({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const id = useId();
+  const qc = useQueryClient();
 
   async function sendCode(e: React.FormEvent) {
     e.preventDefault();
@@ -48,7 +52,11 @@ export function LoginForm({
     setBusy(true);
     setError(null);
     try {
-      onSignedIn(await finishPhoneLogin(phone, code));
+      const me = await finishPhoneLogin(phone, code);
+      // Pages may have fetched the profile mid-sign-in; this one includes the notice receipt.
+      await qc.cancelQueries({ queryKey: queryKeys.me });
+      qc.setQueryData(queryKeys.me, me);
+      onSignedIn(me);
     } catch (err) {
       setError(message(err));
     } finally {
@@ -85,6 +93,14 @@ export function LoginForm({
         <Button type="submit" loading={busy} size="lg">
           Send code
         </Button>
+        <p className="text-xs text-ink-muted">
+          We use your number to sign you in and send updates about your orders, and your addresses
+          to deliver them. Read our{" "}
+          <Link href="/privacy" target="_blank" className="font-semibold text-jaggery underline">
+            privacy notice
+          </Link>
+          .
+        </p>
       </form>
     );
   }

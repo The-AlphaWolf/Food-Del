@@ -12,6 +12,8 @@ export type AuthConfig =
       supabaseUrl: string;
       /** Legacy HS256 projects only; asymmetric (JWKS) keys are preferred. */
       jwtSecret?: string;
+      /** Server-only key used to remove the Supabase login when someone deletes their account. */
+      serviceRoleKey?: string;
     };
 
 export interface ApiConfig {

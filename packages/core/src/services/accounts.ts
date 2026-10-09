@@ -1,23 +1,27 @@
 import { schema } from "@food-del/db";
 import { normaliseIndianMobile } from "@food-del/domain";
 import type { Address, AddressInput, Me } from "@food-del/domain/contracts";
-import { and, asc, desc, eq, inArray, ne } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, ne } from "drizzle-orm";
 import type { CoreDeps } from "../deps";
 import { invalid, notFound } from "../errors";
 import { loadDestination } from "../planning";
 import { requireViewer, type Viewer } from "../viewer";
+import type { PrivacyService } from "./privacy";
 
 const { addresses, memberships, profiles, vendors } = schema;
 
 export class AccountService {
-  constructor(private readonly deps: CoreDeps) {}
+  constructor(
+    private readonly deps: CoreDeps,
+    private readonly privacy: PrivacyService,
+  ) {}
 
-  /** Resolve roles and vendor scope for an authenticated user id. */
+  /** Resolve roles and vendor scope for an authenticated user id. Erased accounts have none. */
   async resolveViewer(userId: string): Promise<Viewer | null> {
     const [profile] = await this.deps.db
       .select({ id: profiles.id })
       .from(profiles)
-      .where(eq(profiles.id, userId));
+      .where(and(eq(profiles.id, userId), isNull(profiles.deletedAt)));
     if (!profile) return null;
     const rows = await this.deps.db
       .select()
@@ -115,6 +119,7 @@ export class AccountService {
       email: profile.email,
       roles: viewer.roles,
       vendors: vendorRows,
+      privacyNoticeAcknowledged: await this.privacy.acknowledgedVersion(viewer.userId),
     };
   }
 

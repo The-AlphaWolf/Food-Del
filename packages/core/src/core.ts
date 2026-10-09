@@ -13,6 +13,7 @@ import { OpsService } from "./services/ops";
 import { OrderService } from "./services/orders";
 import { OutboxProcessor } from "./services/outbox";
 import { PayoutService } from "./services/payouts";
+import { PrivacyService } from "./services/privacy";
 import { QuoteService } from "./services/quotes";
 import { RateLimiter } from "./services/rate-limits";
 import { ServiceabilityService } from "./services/serviceability";
@@ -29,6 +30,7 @@ export function createCore(deps: CoreDeps) {
   const payouts = new PayoutService(deps, outbox);
   const rateLimits = new RateLimiter(deps);
   const health = new HealthService(deps);
+  const privacy = new PrivacyService(deps);
 
   const jobs: Record<JobName, () => Promise<number>> = {
     "lock-batches": () => fulfilment.lockDueBatches(),
@@ -37,12 +39,14 @@ export function createCore(deps: CoreDeps) {
     "release-payouts": () => tracking.releasePayouts(),
     "materialize-slots": () => materializeInventorySlots(deps.db, { days: 30, now: deps.clock() }),
     "process-outbox": () => outbox.process(100),
-    housekeeping: async () => (await rateLimits.prune()) + (await health.pruneJobRuns()),
+    housekeeping: async () =>
+      (await rateLimits.prune()) + (await health.pruneJobRuns()) + (await privacy.applyRetention()),
   };
 
   return {
     deps,
-    accounts: new AccountService(deps),
+    accounts: new AccountService(deps, privacy),
+    privacy,
     catalog: new CatalogService(deps),
     serviceability: new ServiceabilityService(deps),
     quotes: new QuoteService(deps),

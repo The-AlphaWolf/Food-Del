@@ -11,7 +11,7 @@ export interface ServerEnv {
   allowDemo: boolean;
   auth:
     | { mode: "dev"; devSecret: string }
-    | { mode: "supabase"; supabaseUrl: string; jwtSecret?: string };
+    | { mode: "supabase"; supabaseUrl: string; jwtSecret?: string; serviceRoleKey?: string };
   payments:
     | { provider: "fake" }
     | { provider: "razorpay"; keyId: string; keySecret: string; webhookSecret: string };
@@ -72,6 +72,7 @@ export function serverEnv(): ServerEnv {
           mode: "supabase",
           supabaseUrl: req("SUPABASE_URL"),
           jwtSecret: process.env.SUPABASE_JWT_SECRET,
+          serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
         }
       : {
           mode: "dev",

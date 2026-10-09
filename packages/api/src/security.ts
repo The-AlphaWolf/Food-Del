@@ -10,9 +10,12 @@ import type { ApiEnv } from "./env";
 import { problem } from "./errors";
 
 export const RATE_LIMIT_POLICIES = {
-  /** Development OTP sign-in (production OTP is rate-limited by Supabase Auth). */
-  otp: { limit: 20, windowSeconds: 15 * 60 },
-  otpVerify: { limit: 30, windowSeconds: 15 * 60 },
+  /**
+   * Development/demo OTP sign-in only (production OTP is rate-limited by Supabase Auth). Per IP,
+   * generous enough for a browser test suite signing in from one machine.
+   */
+  otp: { limit: 100, windowSeconds: 15 * 60 },
+  otpVerify: { limit: 100, windowSeconds: 15 * 60 },
   /** Placing orders holds stock, so a script could starve a kitchen's capacity. */
   orders: { limit: 20, windowSeconds: 60 * 60 },
   payments: { limit: 30, windowSeconds: 60 * 60 },
@@ -20,6 +23,8 @@ export const RATE_LIMIT_POLICIES = {
   /** Quotes and calendars run the planner: the most expensive public reads. */
   planning: { limit: 120, windowSeconds: 60 },
   pincodes: { limit: 60, windowSeconds: 60 },
+  /** A full data export reads every order a person has ever placed. */
+  exports: { limit: 5, windowSeconds: 24 * 60 * 60 },
 } satisfies Record<string, RateLimitPolicy>;
 export type RateLimitName = keyof typeof RATE_LIMIT_POLICIES;
 

@@ -2,11 +2,11 @@
  * Sessions. Web and mobile send the same JWT — mobile as `Authorization: Bearer`, the web app via
  * an httpOnly cookie as well — so no endpoint assumes a browser.
  */
-import type { Core, Viewer } from "@food-del/core";
+import type { Core, Logger, Viewer } from "@food-del/core";
 import type { Context, MiddlewareHandler } from "hono";
 import { getCookie } from "hono/cookie";
 import { createRemoteJWKSet, type JWTPayload, jwtVerify, SignJWT } from "jose";
-import type { ApiConfig, ApiEnv } from "./env";
+import type { ApiConfig, ApiEnv, AuthConfig } from "./env";
 
 const DEV_ISSUER = "food-del-dev";
 const SESSION_DAYS = 30;
@@ -102,4 +102,33 @@ export function viewerMiddleware(
     c.set("viewer", viewer);
     await next();
   };
+}
+
+/**
+ * Remove the Supabase login after an account is erased, so the phone number can sign up afresh
+ * and no orphaned credential remains. Needs the service-role key; without it, ops removes the
+ * user from the Supabase dashboard (the erased profile already refuses sign-in).
+ */
+export async function deleteSupabaseUser(
+  auth: Extract<AuthConfig, { mode: "supabase" }>,
+  userId: string,
+  logger: Logger,
+): Promise<void> {
+  if (!auth.serviceRoleKey) {
+    logger.warn("supabase user not removed: SUPABASE_SERVICE_ROLE_KEY not set", { userId });
+    return;
+  }
+  try {
+    const res = await fetch(`${auth.supabaseUrl}/auth/v1/admin/users/${userId}`, {
+      method: "DELETE",
+      headers: { apikey: auth.serviceRoleKey, Authorization: `Bearer ${auth.serviceRoleKey}` },
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok && res.status !== 404) throw new Error(`HTTP ${res.status}`);
+  } catch (e) {
+    logger.error("supabase user removal failed", {
+      userId,
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 }

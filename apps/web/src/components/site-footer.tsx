@@ -58,6 +58,11 @@ export function SiteFooter() {
                 For kitchens
               </Link>
             </li>
+            <li>
+              <Link href="/privacy" className="hover:text-jaggery">
+                Privacy notice
+              </Link>
+            </li>
           </ul>
         </div>
       </div>
