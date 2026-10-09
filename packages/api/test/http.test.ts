@@ -8,6 +8,8 @@ import type {
   Me,
   OnboardingOptions,
   OrderDetail,
+  PayoutRow,
+  PayoutSummary,
   PlaceOrderResponse,
   Problem,
   Quote,
@@ -231,6 +233,58 @@ describe("order to doorstep over HTTP", () => {
     const r = await h.call<Problem>("GET", `/v1/orders/${order.id}`, { token: stranger });
     expect(r.status).toBe(404);
   });
+
+  it("shows ops the kitchen's payout once delivered, with a CSV statement", async () => {
+    const detail = await h.call<OrderDetail>("GET", `/v1/orders/${order.id}`, {
+      token: customerToken,
+    });
+    const awb = detail.body.shipments[0]!.awbNumber!;
+    await h.call("POST", "/v1/webhooks/carriers/fake", {
+      body: FakeCarrier.event(awb, "DELIVERED", atIst("2026-10-14", "12:00")),
+      headers: { "x-api-key": FAKE_CARRIER_TOKEN },
+    });
+    const denied = await h.call<Problem>("GET", "/v1/ops/payouts", { token: customerToken });
+    expect(denied.status).toBe(403);
+
+    const opsToken = await h.login(DEV_OPS.phone);
+    const list = await h.call<PayoutRow[]>(
+      "GET",
+      `/v1/ops/payouts?state=NEEDS_ACTION&q=${order.orderNumber}`,
+      { token: opsToken },
+    );
+    expect(list.status).toBe(200);
+    expect(list.body).toEqual([
+      expect.objectContaining({ orderNumber: order.orderNumber, state: "NEEDS_PAYOUT_ACCOUNT" }),
+    ]);
+    const payout = list.body[0]!;
+
+    const summary = await h.call<PayoutSummary>("GET", "/v1/ops/payouts/summary?days=7", {
+      token: opsToken,
+    });
+    expect(summary.body.needsAction.count).toBeGreaterThanOrEqual(1);
+
+    const tooShort = await h.call<Problem>("POST", `/v1/ops/payouts/${payout.id}/hold`, {
+      token: opsToken,
+      body: { reason: "x" },
+    });
+    expect(tooShort.status).toBe(422);
+    const noAccount = await h.call<Problem>("POST", `/v1/ops/payouts/${payout.id}/retry`, {
+      token: opsToken,
+      body: {},
+    });
+    expect(noAccount.status).toBe(409);
+    expect(noAccount.body.code).toBe("NO_PAYOUT_ACCOUNT");
+
+    const res = await h.api.request("/api/v1/ops/payouts/statement?from=2026-10-01&to=2026-10-31", {
+      headers: { Authorization: `Bearer ${opsToken}` },
+    });
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("text/csv");
+    expect(res.headers.get("content-disposition")).toContain(
+      "payouts-2026-10-01-to-2026-10-31.csv",
+    );
+    expect(await res.text()).toContain(order.orderNumber);
+  });
 });
 
 describe("operations", () => {
@@ -242,7 +296,9 @@ describe("operations", () => {
       token: opsToken,
     });
     expect(r.status).toBe(200);
-    expect(r.body.counts.inFlight).toBeGreaterThanOrEqual(1);
+    // The earlier journey's parcel is either still moving or already delivered.
+    const { inFlight = 0, deliveredLast7d = 0 } = r.body.counts;
+    expect(inFlight + deliveredLast7d).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -344,7 +400,15 @@ describe("OpenAPI", () => {
       expect.arrayContaining(["/api/v1/quotes", "/api/v1/orders", "/api/v1/availability"]),
     );
     expect(Object.keys(r.body.components.schemas)).toEqual(
-      expect.arrayContaining(["Quote", "OrderDetail", "ItemCard", "KitchenDetail", "Route"]),
+      expect.arrayContaining([
+        "Quote",
+        "OrderDetail",
+        "ItemCard",
+        "KitchenDetail",
+        "Route",
+        "PayoutRow",
+        "PayoutSummary",
+      ]),
     );
   });
 

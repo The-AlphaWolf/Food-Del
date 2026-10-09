@@ -8,5 +8,6 @@ export * from "./common";
 export * from "./onboarding";
 export * from "./ops";
 export * from "./orders";
+export * from "./payouts";
 export * from "./serviceability";
 export * from "./vendor";

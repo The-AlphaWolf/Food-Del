@@ -13,6 +13,7 @@ import type {
   CreateClaimRequest,
   CreateKitchenRequest,
   DirectoryDistrict,
+  HoldPayoutRequest,
   InventoryGrid,
   InventoryUpdateRequest,
   ItemAdminDetail,
@@ -32,6 +33,9 @@ import type {
   OpsVendor,
   OrderDetail,
   OrderSummary,
+  PayoutListQuery,
+  PayoutRow,
+  PayoutSummary,
   PincodeLookup,
   PlaceOrderRequest,
   PlaceOrderResponse,
@@ -92,7 +96,13 @@ export function createApiClient(options: ApiClientOptions) {
   async function request<T>(
     method: string,
     path: string,
-    init: { query?: Query; body?: unknown; headers?: Record<string, string> } = {},
+    init: {
+      query?: Query;
+      body?: unknown;
+      headers?: Record<string, string>;
+      /** Read the body as text (CSV exports) instead of JSON. */
+      as?: "json" | "text";
+    } = {},
   ): Promise<T> {
     const token = options.getToken ? await options.getToken() : null;
     let res: Response;
@@ -101,7 +111,7 @@ export function createApiClient(options: ApiClientOptions) {
         method,
         credentials: "include",
         headers: {
-          Accept: "application/json",
+          Accept: init.as === "text" ? "text/csv, application/problem+json" : "application/json",
           ...(init.body !== undefined ? { "Content-Type": "application/json" } : {}),
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
           ...(options.clientVersion ? { "X-Client-Version": options.clientVersion } : {}),
@@ -114,6 +124,7 @@ export function createApiClient(options: ApiClientOptions) {
     }
     if (res.status === 204) return undefined as T;
     const text = await res.text();
+    if (res.ok && init.as === "text") return text as T;
     const data = text ? (JSON.parse(text) as unknown) : null;
     if (!res.ok) {
       if (res.status === 401) options.onUnauthorized?.();
@@ -225,6 +236,16 @@ export function createApiClient(options: ApiClientOptions) {
     directoryDistricts: (stateCode?: string) =>
       get<DirectoryDistrict[]>("/v1/ops/directory/districts", { stateCode }),
     createCity: (body: CreateCityRequest) => post<OpsCity[]>("/v1/ops/cities", body),
+
+    // Payouts (ops)
+    payoutSummary: (days = 30) => get<PayoutSummary>("/v1/ops/payouts/summary", { days }),
+    payouts: (query: PayoutListQuery = {}) => get<PayoutRow[]>("/v1/ops/payouts", query),
+    payoutStatement: (query: { from: string; to: string; vendorId?: string }) =>
+      request<string>("GET", "/v1/ops/payouts/statement", { query, as: "text" }),
+    holdPayout: (id: string, body: HoldPayoutRequest) =>
+      post<PayoutRow>(`/v1/ops/payouts/${id}/hold`, body),
+    resumePayout: (id: string) => post<PayoutRow>(`/v1/ops/payouts/${id}/resume`),
+    retryPayout: (id: string) => post<PayoutRow>(`/v1/ops/payouts/${id}/retry`),
 
     // Development tools (only mounted when enabled on the server)
     devPay: (orderId: string) => post<OrderDetail>(`/v1/dev/orders/${orderId}/pay`),

@@ -11,6 +11,7 @@ import { registerDevRoutes } from "./routes/dev";
 import { registerOnboardingRoutes } from "./routes/onboarding";
 import { registerOpsRoutes } from "./routes/ops";
 import { registerOrderRoutes } from "./routes/orders";
+import { registerPayoutRoutes } from "./routes/payouts";
 import { registerPublicRoutes } from "./routes/public";
 import { registerVendorRoutes } from "./routes/vendor";
 import { registerWebhookRoutes } from "./routes/webhooks";
@@ -51,6 +52,7 @@ export function createApi(core: Core, input: Partial<ApiConfig> & Pick<ApiConfig
   registerVendorRoutes(app);
   registerOpsRoutes(app);
   registerOnboardingRoutes(app);
+  registerPayoutRoutes(app);
   registerWebhookRoutes(app, config);
   if (config.devTools) registerDevRoutes(app);
 
