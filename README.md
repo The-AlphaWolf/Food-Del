@@ -43,6 +43,11 @@ Out of the box everything runs locally with no third-party accounts:
 | Ops desk | `9900000002` | `/ops` |
 | Kitchen owners | `99000001NN`, one per seeded kitchen in order: `01` Bagbazar Mishti Ghar (Kolkata), `05` Chandni Chowk Halwai (Delhi NCR), … | `/vendor` |
 
+**Onboarding.** Sign in at `/ops` as the ops desk:
+- **Kitchens:** add one (it starts in onboarding), draft its delicacies with a live "where can it reach fresh" preview, then go live from its checklist.
+- **Routes:** courier services between cities.
+- **Cities:** claim a new city's pincodes from the directory.
+
 **Scheduled jobs.** In production, Vercel Cron runs them (see [ADR 0004](docs/adr/0004-scheduling-with-cron-and-outbox.md)): batch locking at cutoff, courier booking, notifications, at-risk alerts and payouts. Locally, run them in a second terminal with `pnpm --filter @food-del/web jobs:tick`.
 
 **API.** OpenAPI 3.1 at `/api/v1/openapi.json`, Swagger UI at `/api/v1/docs`.

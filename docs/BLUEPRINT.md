@@ -233,13 +233,20 @@ CANCELLED   FAILED(VENDOR_UNFULFILLED)                                          
 | M8 | Admin & ops: cities, lanes, blackouts, vendor onboarding, exceptions, claims, payouts | Launch a vendor and city with no deploy. |
 | M9 | Hardening & pilot: 10× festival load test, security, DPDP, monitoring, runbooks | Pilot on 2–3 lanes. |
 
-**Progress (October 2026):** M0–M7 are built and running against the fake payment and courier adapters, with 150+ unit, property and database tests. Playwright journeys run on phone and desktop:
+**Progress (October 2026):** M0–M8 are built and running against the fake payment and courier adapters, with 180+ unit, property and database tests. Playwright journeys run on phone and desktop:
 - **Shopper:** pincode → dated pre-order → pay.
 - **Kitchen and ops:** batch → pack → label → courier scans → delivered.
+- **Onboarding:** ops adds a kitchen, drafts its first delicacy (checking where it can reach fresh), puts it on sale and takes the kitchen live; routes are edited from the console.
 
-M8 is partly built. The console handles exceptions, claims, blackouts, and launching or pausing cities and kitchens. Still to come: onboarding a new kitchen, items and lanes from the console (today they come from seed data), and a payouts screen for ops (kitchens already see their own).
+Launching a kitchen, a delicacy, a route or a city is now a data change made in the ops console:
+- **Kitchens** start in onboarding and go live only when their checklist passes: a valid FSSAI licence, an owner who can sign in, something on sale, routes out of the city, and dispatch days. Owners are invited by mobile number and keep the invitation when they first sign in through Supabase.
+- **Delicacies:** the form previews, with the real planner, which cities each one can reach fresh before it goes on sale.
+- **Routes:** one courier service from a city to every pincode of another.
+- **Cities:** each new city claims its districts from the pincode directory.
 
-Next up are the rest of M8, M9 and the business setup above. Razorpay and Shiprocket are switched on with environment variables (see `.env.example`).
+Still open in M8: a payouts screen for ops (kitchens already see their own).
+
+Next up is M9, along with the business setup above. Razorpay and Shiprocket are switched on with environment variables (see `.env.example`).
 
 - **Phase 2:** Expo app reusing `domain`, `api-client` and `design-tokens`. Razorpay RN SDK, push notifications, deep links. Optional standalone `apps/api-server`.
 - **Phase 3:** Frozen/cooked meals, learned transit times, hampers and corporate gifting, origin hubs, direct courier contracts, Tier-2 rollout.
