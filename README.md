@@ -4,6 +4,8 @@ Cross-city delicacy delivery for India: iconic regional sweets, bakes and specia
 
 - **Product and technical blueprint:** [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md)
 - **Architecture decisions:** [`docs/adr/`](docs/adr)
+- **Operations:** [`docs/runbooks/`](docs/runbooks/README.md), [pilot plan](docs/pilot-plan.md), [monitoring](docs/monitoring.md), [load test](docs/load-test.md)
+- **Security and privacy:** [`docs/security.md`](docs/security.md), [`docs/privacy.md`](docs/privacy.md)
 
 ## Repository layout
 

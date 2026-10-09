@@ -233,11 +233,13 @@ CANCELLED   FAILED(VENDOR_UNFULFILLED)                                          
 | M8 | Admin & ops: cities, lanes, blackouts, vendor onboarding, exceptions, claims, payouts | Launch a vendor and city with no deploy. |
 | M9 | Hardening & pilot: 10× festival load test, security, DPDP, monitoring, runbooks | Pilot on 2–3 lanes. |
 
-**Progress (October 2026):** M0–M8 are built and running against the fake payment and courier adapters, with 200+ unit, property and database tests. Playwright journeys run on phone and desktop:
+**Progress (October 2026):** M0–M9 engineering is built and running against the fake payment and courier adapters, with 200+ unit, property and database tests. Playwright journeys run on phone and desktop:
 - **Shopper:** pincode → dated pre-order → pay.
 - **Kitchen and ops:** batch → pack → label → courier scans → delivered.
 - **Onboarding:** ops adds a kitchen, drafts its first delicacy (checking where it can reach fresh), puts it on sale and takes the kitchen live; routes are edited from the console.
 - **Payouts:** ops finds a delivered parcel's payout, holds it for review, resumes it and downloads a statement.
+- **System health:** ops sees each scheduled job against its schedule and runs one on demand.
+- **Privacy:** a customer downloads their data and deletes their account.
 
 Launching a kitchen, a delicacy, a route or a city is now a data change made in the ops console:
 - **Kitchens** start in onboarding and go live only when their checklist passes: a valid FSSAI licence, an owner who can sign in, something on sale, routes out of the city, and dispatch days. Owners are invited by mobile number and keep the invitation when they first sign in through Supabase.
@@ -252,7 +254,32 @@ Launching a kitchen, a delicacy, a route or a city is now a data change made in 
 
 Payouts move only through provider transfers, and clawbacks reverse them ([ADR 0005](adr/0005-payouts-move-only-through-transfers.md)).
 
-With that, M8 is complete. Next up is M9, along with the business setup above. Razorpay and Shiprocket are switched on with environment variables (see `.env.example`).
+**M9 hardening** is built:
+- **Security** ([security](security.md)):
+  - access checks by route family before any input is read, with an authorization matrix test over every route;
+  - Postgres-backed rate limits;
+  - same-origin checks for cookie sessions;
+  - Content-Security-Policy and HSTS.
+- **Monitoring** ([monitoring](monitoring.md)):
+  - every scheduled job run is recorded;
+  - the ops overview shows each job against its schedule, queued and parked work, and the last payment and courier signals;
+  - a readiness endpoint for uptime monitors;
+  - server errors go to Sentry with personal data redacted.
+- **DPDP** ([privacy](privacy.md)):
+  - a privacy notice, recorded at sign-in;
+  - "download my data";
+  - account deletion that erases the person but keeps anonymised tax records;
+  - 180-day retention for message text.
+- **Load** ([load test](load-test.md)):
+  - 10× festival peak passes with p95 under 100 ms;
+  - after fixing the catalogue planning hot path, one server process handles 30×;
+  - public reads are CDN-cacheable.
+- **Operations:** [runbooks](runbooks/README.md) for incidents, payments, courier outages, at-risk parcels, payout reconciliation, deploys and festival readiness.
+
+What remains for M9 is the pilot itself: three lanes into Diwali, with entry criteria, metrics and stop rules ([pilot plan](pilot-plan.md)). It needs the business setup above:
+- signed kitchens;
+- live Razorpay, Shiprocket, MSG91 and WhatsApp accounts;
+- a Grievance Officer.
 
 - **Phase 2:** Expo app reusing `domain`, `api-client` and `design-tokens`. Razorpay RN SDK, push notifications, deep links. Optional standalone `apps/api-server`.
 - **Phase 3:** Frozen/cooked meals, learned transit times, hampers and corporate gifting, origin hubs, direct courier contracts, Tier-2 rollout.
