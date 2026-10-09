@@ -1,0 +1,33 @@
+{
+  "name": "@food-del/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Hono + OpenAPI HTTP API (/api/v1). Mounted in Next.js for Phase 1; deployable standalone.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "openapi": "tsx scripts/openapi.ts"
+  },
+  "dependencies": {
+    "@food-del/core": "workspace:*",
+    "@food-del/domain": "workspace:*",
+    "@food-del/integrations": "workspace:*",
+    "@hono/swagger-ui": "catalog:",
+    "@hono/zod-openapi": "catalog:",
+    "hono": "catalog:",
+    "jose": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@food-del/config": "workspace:*",
+    "@food-del/db": "workspace:*",
+    "@types/node": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

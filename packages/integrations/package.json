@@ -1,0 +1,23 @@
+{
+  "name": "@food-del/integrations",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Ports and adapters for third parties: payments (Razorpay), logistics (Shiprocket), messaging (MSG91, WhatsApp, Resend), plus fakes.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@food-del/domain": "workspace:*"
+  },
+  "devDependencies": {
+    "@food-del/config": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

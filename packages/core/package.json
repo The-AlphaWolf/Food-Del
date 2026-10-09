@@ -1,0 +1,27 @@
+{
+  "name": "@food-del/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Server-side use-cases: catalogue, serviceability, quotes, orders, fulfilment, tracking, ops.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./src/testing.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@food-del/db": "workspace:*",
+    "@food-del/domain": "workspace:*",
+    "@food-del/integrations": "workspace:*",
+    "drizzle-orm": "catalog:"
+  },
+  "devDependencies": {
+    "@food-del/config": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

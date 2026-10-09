@@ -165,7 +165,8 @@ const { db, close } = createDb(databaseUrl(), { max: 1 });
 try {
   const cityRows = await db.select({ id: cities.id, slug: cities.slug }).from(cities);
   const cityByDistrict = new Map<string, string>();
-  for (const c of cityRows) for (const d of CITY_DISTRICTS[c.slug] ?? []) cityByDistrict.set(d, c.id);
+  for (const c of cityRows)
+    for (const d of CITY_DISTRICTS[c.slug] ?? []) cityByDistrict.set(d, c.id);
 
   const rows = [...byPincode.values()].map((r) => ({
     pincode: r.pincode,

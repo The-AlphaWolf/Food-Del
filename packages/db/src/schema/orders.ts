@@ -163,7 +163,10 @@ export interface ItemSnapshot {
   vendorName: string;
   tempClass: string;
   shelfLifeHours: number;
+  minResidualHours: number;
+  hsnCode: string;
   diet: string;
+  sku: string;
 }
 
 export const orderItems = pgTable(
