@@ -3,10 +3,12 @@ import "@fontsource-variable/playfair-display";
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { DemoGate } from "@/components/demo/gate";
 import { MobileTabBar } from "@/components/mobile-tab-bar";
 import { Providers } from "@/components/providers";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { STATIC_DEMO } from "@/lib/demo";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.APP_URL ?? "http://localhost:3000"),
@@ -30,17 +32,20 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
+  const site = (
+    <>
+      <SiteHeader />
+      <main id="main" className="flex-1">
+        {children}
+      </main>
+      <SiteFooter />
+      <MobileTabBar />
+    </>
+  );
   return (
     <html lang="en-IN">
       <body className="flex min-h-dvh flex-col antialiased">
-        <Providers>
-          <SiteHeader />
-          <main id="main" className="flex-1">
-            {children}
-          </main>
-          <SiteFooter />
-          <MobileTabBar />
-        </Providers>
+        <Providers>{STATIC_DEMO ? <DemoGate>{site}</DemoGate> : site}</Providers>
       </body>
     </html>
   );

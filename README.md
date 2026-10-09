@@ -2,6 +2,7 @@
 
 Cross-city delicacy delivery for India: iconic regional sweets, bakes and specialities, shipped fresh from their home city with scheduled pre-orders, batch dispatch and a passive cold chain.
 
+- **Live demo (runs entirely in your browser):** https://the-alphawolf.github.io/Food-Del/ ([how](docs/pages-demo.md))
 - **Product and technical blueprint:** [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md)
 - **Architecture decisions:** [`docs/adr/`](docs/adr)
 - **Operations:** [`docs/runbooks/`](docs/runbooks/README.md), [pilot plan](docs/pilot-plan.md), [monitoring](docs/monitoring.md), [load test](docs/load-test.md)

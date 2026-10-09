@@ -10,7 +10,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "e2e": "playwright test",
-    "jobs:tick": "node scripts/tick.mjs"
+    "jobs:tick": "node scripts/tick.mjs",
+    "build:pages": "node scripts/build-pages.mjs",
+    "e2e:pages": "playwright test -c playwright.pages.config.ts"
   },
   "dependencies": {
     "@fontsource-variable/karla": "5.3.0",

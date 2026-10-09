@@ -26,7 +26,24 @@ const contentSecurityPolicy = [
   "object-src 'none'",
 ].join("; ");
 
+/**
+ * The GitHub Pages demo (`build:pages`): a static export with the API served by a service worker.
+ * Only `.tsx` files become routes, which leaves out the API route handler, sitemap, robots and
+ * manifest; a static host can't send response headers either.
+ */
+const staticDemo = process.env.NEXT_PUBLIC_STATIC_DEMO === "1";
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || undefined;
+
 const config: NextConfig = {
+  ...(staticDemo
+    ? {
+        output: "export" as const,
+        basePath,
+        trailingSlash: true,
+        images: { unoptimized: true },
+        pageExtensions: ["tsx"],
+      }
+    : {}),
   // Internal packages are shipped as TypeScript source.
   transpilePackages: [
     "@food-del/api",
@@ -41,6 +58,7 @@ const config: NextConfig = {
   reactStrictMode: true,
   typescript: { ignoreBuildErrors: false },
   async headers() {
+    if (staticDemo) return [];
     return [
       {
         source: "/(.*)",

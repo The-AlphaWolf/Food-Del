@@ -1,0 +1,8 @@
+{
+  "extends": "@food-del/config/tsconfig.base.json",
+  "compilerOptions": {
+    // The service worker runs in a worker scope (packages/demo/src/sw.ts).
+    "lib": ["ES2023", "WebWorker"]
+  },
+  "include": ["src", "vitest.config.ts"]
+}

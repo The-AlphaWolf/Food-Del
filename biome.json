@@ -10,6 +10,8 @@
       "**",
       "!**/migrations/meta",
       "!**/.next",
+      "!apps/web/out",
+      "!apps/web/public/demo-sw.js*",
       "!**/node_modules",
       "!**/*.gen.ts",
       "!packages/design-tokens/src/theme.css",

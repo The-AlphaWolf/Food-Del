@@ -1,0 +1,58 @@
+name: Pages
+
+# The GitHub Pages demo: a static export of the site whose API, core services and Postgres
+# (PGlite) run in the visitor's browser. See docs/pages-demo.md.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    name: Build, test and publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
+      APP_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+      TURBO_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @food-del/web build:pages
+      - run: pnpm --filter @food-del/web exec playwright install --with-deps chromium
+      # The whole journey (browse, order, pay, ops) against the exported files, as Pages serves them.
+      - run: pnpm --filter @food-del/web e2e:pages
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: pages-playwright-report
+          path: |
+            apps/web/playwright-report
+            apps/web/test-results
+          retention-days: 7
+      - name: Publish to the gh-pages branch
+        working-directory: apps/web/out
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Next's assets live in _next/; without this Jekyll would skip them.
+          touch .nojekyll
+          git init -q -b gh-pages
+          git add -A
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "Deploy ${GITHUB_SHA}"
+          git push -q --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
+          echo "Published to $APP_URL/" >> "$GITHUB_STEP_SUMMARY"
