@@ -1,0 +1,29 @@
+{
+  "name": "food-del",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "turbo run dev --filter=@food-del/web",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "db:migrate": "pnpm --filter @food-del/db run migrate",
+    "db:seed": "pnpm --filter @food-del/db run seed",
+    "db:reset": "pnpm --filter @food-del/db run reset",
+    "db:generate": "pnpm --filter @food-del/db run generate",
+    "calendar": "pnpm --filter @food-del/domain run calendar",
+    "e2e": "pnpm --filter @food-del/web run e2e"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:",
+    "turbo": "catalog:",
+    "typescript": "catalog:"
+  }
+}
