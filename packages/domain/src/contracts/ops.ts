@@ -161,6 +161,7 @@ export const JOB_NAMES = [
   "release-payouts",
   "materialize-slots",
   "process-outbox",
+  "housekeeping",
 ] as const;
 export const JobNameSchema = z.enum(JOB_NAMES).meta({ id: "JobName" });
 export type JobName = z.infer<typeof JobNameSchema>;

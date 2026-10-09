@@ -202,7 +202,7 @@ describe("order to doorstep over HTTP", () => {
       },
     );
     expect(packed.body.status).toBe("PACKED_COLD_CHAIN");
-    await h.call("POST", "/v1/dev/tick");
+    await h.call("POST", "/v1/dev/tick", { headers: { Authorization: "Bearer cron-secret" } });
   });
 
   it("accepts courier webhooks only with the right token", async () => {

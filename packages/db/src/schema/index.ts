@@ -4,3 +4,4 @@ export * from "./geo";
 export * from "./identity";
 export * from "./logistics";
 export * from "./orders";
+export * from "./platform";

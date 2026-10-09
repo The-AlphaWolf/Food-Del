@@ -1,15 +1,17 @@
 import { createTestCore, type TestCore } from "@food-del/core/testing";
 import { createApi } from "../src/app";
+import type { ApiConfig } from "../src/env";
 
 export const DEV_SECRET = "test-secret-at-least-32-characters-long!!";
 
-export async function createTestApi(now: Date) {
+export async function createTestApi(now: Date, overrides: Partial<ApiConfig> = {}) {
   const t: TestCore = await createTestCore({ now });
   const api = createApi(t.core, {
     auth: { mode: "dev", devSecret: DEV_SECRET },
     devTools: true,
     cronSecret: "cron-secret",
     secureCookies: false,
+    ...overrides,
   });
   /** JSON request helper returning status, headers and parsed body. */
   async function call<T = unknown>(

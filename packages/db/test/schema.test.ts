@@ -108,6 +108,13 @@ describe("row-level security", () => {
     expect(rows[0]!.n).toBe(29);
   });
 
+  it("locks down every table with row-level security", async () => {
+    const open = (await h.db.execute(
+      sql`select tablename from pg_tables where schemaname = 'public' and not rowsecurity`,
+    )) as unknown as { tablename: string }[];
+    expect(open.map((t) => t.tablename)).toEqual([]);
+  });
+
   it("hides operational tables from the public", async () => {
     const lanes = await asRole<{ n: number }>(
       "anon",

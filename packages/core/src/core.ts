@@ -13,6 +13,7 @@ import { OrderService } from "./services/orders";
 import { OutboxProcessor } from "./services/outbox";
 import { PayoutService } from "./services/payouts";
 import { QuoteService } from "./services/quotes";
+import { RateLimiter } from "./services/rate-limits";
 import { ServiceabilityService } from "./services/serviceability";
 import { TrackingService } from "./services/tracking";
 
@@ -25,6 +26,7 @@ export function createCore(deps: CoreDeps) {
   const outbox = new OutboxProcessor(deps, { fulfilment, tracking, notifications });
   fulfilment.attachOutbox(outbox);
   const payouts = new PayoutService(deps, outbox);
+  const rateLimits = new RateLimiter(deps);
 
   const jobs: Record<JobName, () => Promise<number>> = {
     "lock-batches": () => fulfilment.lockDueBatches(),
@@ -33,6 +35,7 @@ export function createCore(deps: CoreDeps) {
     "release-payouts": () => tracking.releasePayouts(),
     "materialize-slots": () => materializeInventorySlots(deps.db, { days: 30, now: deps.clock() }),
     "process-outbox": () => outbox.process(100),
+    housekeeping: () => rateLimits.prune(),
   };
 
   return {
@@ -48,6 +51,7 @@ export function createCore(deps: CoreDeps) {
     ops: new OpsService(deps),
     onboarding: new OnboardingService(deps),
     payouts,
+    rateLimits,
     notifications,
     outbox,
     /** Liveness plus a database round-trip. */

@@ -4,7 +4,12 @@ const every = Number(process.env.TICK_SECONDS ?? 30) * 1000;
 
 async function tick() {
   try {
-    const res = await fetch(`${base}/api/v1/dev/tick`, { method: "POST" });
+    const res = await fetch(`${base}/api/v1/dev/tick`, {
+      method: "POST",
+      headers: process.env.CRON_SECRET
+        ? { Authorization: `Bearer ${process.env.CRON_SECRET}` }
+        : {},
+    });
     const results = await res.json();
     const busy = Array.isArray(results) ? results.filter((r) => r.processed > 0) : [];
     if (busy.length)

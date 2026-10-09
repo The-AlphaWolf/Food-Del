@@ -49,6 +49,7 @@ const JOB_LABELS: Record<JobName, string> = {
   "release-payouts": "Release payouts",
   "materialize-slots": "Open order book",
   "process-outbox": "Send queued work",
+  housekeeping: "Tidy up old records",
 };
 
 function Overview() {

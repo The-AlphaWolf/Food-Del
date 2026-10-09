@@ -15,6 +15,7 @@ import { registerPayoutRoutes } from "./routes/payouts";
 import { registerPublicRoutes } from "./routes/public";
 import { registerVendorRoutes } from "./routes/vendor";
 import { registerWebhookRoutes } from "./routes/webhooks";
+import { rateLimit, requireAudience, sameOriginForCookies } from "./security";
 
 export const API_VERSION = "1.0.0";
 
@@ -43,7 +44,26 @@ export function createApi(core: Core, input: Partial<ApiConfig> & Pick<ApiConfig
     await next();
   });
   app.use("*", viewerMiddleware(core, tokens, config));
+  app.use("*", sameOriginForCookies(config.sessionCookieName));
   app.onError(onError);
+
+  // Access by route family, checked before any input is parsed.
+  app.use("/v1/ops/*", requireAudience("staff"));
+  app.use("/v1/vendor/*", requireAudience("kitchen"));
+  for (const path of ["/v1/me", "/v1/me/*", "/v1/orders", "/v1/orders/*", "/v1/shipments/*"]) {
+    app.use(path, requireAudience("signed-in"));
+  }
+
+  // Rate limits on abuse-prone endpoints (Postgres-backed, shared by every instance).
+  const limits = config.rateLimits ?? {};
+  app.post("/v1/auth/otp", rateLimit("otp", limits));
+  app.post("/v1/auth/verify", rateLimit("otpVerify", limits));
+  app.post("/v1/orders", rateLimit("orders", limits));
+  app.post("/v1/orders/:id/payment", rateLimit("payments", limits));
+  app.post("/v1/shipments/:id/claims", rateLimit("claims", limits));
+  app.post("/v1/quotes", rateLimit("planning", limits));
+  app.get("/v1/availability", rateLimit("planning", limits));
+  app.get("/v1/pincodes/:pincode", rateLimit("pincodes", limits));
   app.notFound((c) => problem(c, 404, "NOT_FOUND", "No such endpoint."));
 
   registerPublicRoutes(app);
@@ -54,7 +74,7 @@ export function createApi(core: Core, input: Partial<ApiConfig> & Pick<ApiConfig
   registerOnboardingRoutes(app);
   registerPayoutRoutes(app);
   registerWebhookRoutes(app, config);
-  if (config.devTools) registerDevRoutes(app);
+  if (config.devTools) registerDevRoutes(app, config);
 
   app.openAPIRegistry.registerComponent("securitySchemes", "bearerAuth", {
     type: "http",

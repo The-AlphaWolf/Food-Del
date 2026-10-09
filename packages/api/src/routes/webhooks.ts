@@ -3,6 +3,7 @@ import { JOB_NAMES, type JobName } from "@food-del/domain/contracts";
 import type { Context } from "hono";
 import type { ApiConfig, ApiEnv } from "../env";
 import { problem } from "../errors";
+import { secretMatches } from "../security";
 import type { App } from "./shared";
 
 /**
@@ -43,8 +44,9 @@ export function registerWebhookRoutes(app: App, config: ApiConfig) {
     const job = c.req.param("job") as JobName;
     if (!(JOB_NAMES as readonly string[]).includes(job))
       return problem(c, 404, "UNKNOWN_JOB", "No such job.");
-    const auth = c.req.header("authorization") ?? "";
-    const cronOk = config.cronSecret !== null && auth === `Bearer ${config.cronSecret}`;
+    const cronOk =
+      config.cronSecret !== null &&
+      secretMatches(c.req.header("authorization"), `Bearer ${config.cronSecret}`);
     if (!cronOk && !isStaff(c.get("viewer")))
       return problem(c, 401, "UNAUTHENTICATED", "Not allowed.");
     const core = c.get("core");

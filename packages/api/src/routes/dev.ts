@@ -5,7 +5,9 @@
 import { isStaff, notFound, requireViewer } from "@food-del/core";
 import { SHIPMENT_STATUSES, type ShipmentStatus } from "@food-del/domain";
 import { FakeCarrier, FakePaymentProvider } from "@food-del/integrations";
+import type { ApiConfig } from "../env";
 import { problem } from "../errors";
+import { secretMatches } from "../security";
 import type { App } from "./shared";
 
 const TICK_JOBS = [
@@ -16,7 +18,7 @@ const TICK_JOBS = [
   "process-outbox",
 ] as const;
 
-export function registerDevRoutes(app: App) {
+export function registerDevRoutes(app: App, config: ApiConfig) {
   app.post("/v1/dev/orders/:id/pay", async (c) => {
     const core = c.get("core");
     const viewer = requireViewer(c.get("viewer"));
@@ -59,6 +61,12 @@ export function registerDevRoutes(app: App) {
   });
 
   app.post("/v1/dev/tick", async (c) => {
+    // Demo deployments set CRON_SECRET: then only the scheduler or ops may run every job at once.
+    const allowed =
+      config.cronSecret === null ||
+      isStaff(c.get("viewer")) ||
+      secretMatches(c.req.header("authorization"), `Bearer ${config.cronSecret}`);
+    if (!allowed) return problem(c, 401, "UNAUTHENTICATED", "Not allowed.");
     const core = c.get("core");
     const results = [];
     for (const job of TICK_JOBS) results.push(await core.runJob(job));

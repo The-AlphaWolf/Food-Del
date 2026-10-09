@@ -3,7 +3,8 @@ import { expectNoA11yBasics, freshPhone, signIn } from "./helpers";
 
 test.describe("shopper journey", () => {
   test("checks a pincode and sees real delivery dates", async ({ page }) => {
-    await page.goto("/");
+    const res = await page.goto("/");
+    expect(res?.headers()["content-security-policy"]).toContain("frame-ancestors 'none'");
     await expect(page.getByRole("heading", { name: /taste of another city/i })).toBeVisible();
     const main = page.getByRole("main");
     await main.getByLabel("Deliver to pincode").fill("302001");
@@ -18,6 +19,11 @@ test.describe("shopper journey", () => {
   });
 
   test("orders a chilled sweet for a chosen date and pays", async ({ page }) => {
+    // The content security policy must never block our own pages.
+    const blocked: string[] = [];
+    page.on("console", (m) => {
+      if (/Content Security Policy/i.test(m.text())) blocked.push(m.text());
+    });
     await page
       .context()
       .addCookies([{ name: "fd_pin", value: "560038", url: "http://localhost:3000" }]);
@@ -50,6 +56,7 @@ test.describe("shopper journey", () => {
     await expect(page.getByText("Order confirmed — thank you!")).toBeVisible();
     await expect(page.getByRole("heading", { level: 1, name: "Confirmed" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Cancel order" })).toBeVisible();
+    expect(blocked).toEqual([]);
   });
 
   test("explains why a two-day sweet can't fly across the country", async ({ page }) => {

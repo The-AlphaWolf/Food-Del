@@ -1,4 +1,4 @@
-import type { Core, Viewer } from "@food-del/core";
+import type { Core, RateLimitPolicy, Viewer } from "@food-del/core";
 
 export type AuthConfig =
   | {
@@ -24,6 +24,8 @@ export interface ApiConfig {
   cronSecret: string | null;
   sessionCookieName: string;
   secureCookies: boolean;
+  /** Override rate-limit policies by name, or `false` to switch them off (tests). */
+  rateLimits?: Partial<Record<string, RateLimitPolicy>> | false;
   /** Verifies inbound payment/courier webhooks; defaults to the core's providers. */
   carrierWebhookProviders?: string[];
 }
