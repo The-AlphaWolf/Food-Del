@@ -17,15 +17,17 @@ export function testDatabaseUrl(): string {
 }
 
 /**
- * Each package gets its own database (`<test db>_<package>`) so turbo can run suites in
- * parallel without one package dropping another's schema mid-test.
+ * Each package, and each Vitest worker within it, gets its own database
+ * (`<test db>_<package>_<worker>`) so suites and test files run in parallel without one
+ * dropping another's schema mid-test.
  */
 async function packageDatabaseUrl(): Promise<string> {
   const base = new URL(testDatabaseUrl());
   const pkg = (process.env.npm_package_name ?? "default")
     .replace(/^@food-del\//, "")
     .replace(/\W+/g, "_");
-  const name = `${base.pathname.slice(1)}_${pkg}`;
+  const worker = process.env.VITEST_POOL_ID ? `_${process.env.VITEST_POOL_ID}` : "";
+  const name = `${base.pathname.slice(1)}_${pkg}${worker}`;
   const admin = createDb(base.toString(), { max: 1 });
   try {
     const exists = await admin.db.execute(sql`select 1 from pg_database where datname = ${name}`);

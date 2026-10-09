@@ -14,3 +14,7 @@ test-results/
 .DS_Store
 *.log
 next-env.d.ts
+
+# Compiled output never belongs next to TypeScript sources
+packages/*/src/**/*.js
+apps/*/src/**/*.js
