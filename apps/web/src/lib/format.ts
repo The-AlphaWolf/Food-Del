@@ -1,6 +1,12 @@
-import { formatINR, formatLocalDate, SHIP_MODE_LABELS, type ShipMode } from "@food-del/domain";
+import {
+  formatINR,
+  formatLocalDate,
+  formatLongDate,
+  SHIP_MODE_LABELS,
+  type ShipMode,
+} from "@food-del/domain";
 
-export { formatINR, formatLocalDate };
+export { formatINR, formatLocalDate, formatLongDate };
 
 export function modeLabel(mode: ShipMode): string {
   return SHIP_MODE_LABELS[mode];

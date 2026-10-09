@@ -10,9 +10,15 @@ const TABS = [
   { href: "/ops", label: "Overview" },
   { href: "/ops/parcels", label: "Parcels" },
   { href: "/ops/claims", label: "Claims" },
+  { href: "/ops/kitchens", label: "Kitchens" },
+  { href: "/ops/routes", label: "Routes" },
+  { href: "/ops/cities", label: "Cities" },
   { href: "/ops/calendar", label: "Calendar" },
-  { href: "/ops/network", label: "Cities & kitchens" },
 ];
+
+/** The tab a page belongs to: exact for the overview, by section for everything else. */
+const isCurrent = (path: string, href: string) =>
+  href === "/ops" ? path === href : path === href || path.startsWith(`${href}/`);
 
 export function OpsShell({ children }: { children: ReactNode }) {
   const path = usePathname();
@@ -24,10 +30,10 @@ export function OpsShell({ children }: { children: ReactNode }) {
             <Link
               key={t.href}
               href={t.href}
-              aria-current={path === t.href ? "page" : undefined}
+              aria-current={isCurrent(path, t.href) ? "page" : undefined}
               className={cn(
-                "whitespace-nowrap border-b-2 px-3 py-3 text-sm font-semibold",
-                path === t.href
+                "flex min-h-12 items-center whitespace-nowrap border-b-2 px-3 text-sm font-semibold transition-colors",
+                isCurrent(path, t.href)
                   ? "border-jaggery text-jaggery"
                   : "border-transparent text-ink-soft hover:text-ink",
               )}

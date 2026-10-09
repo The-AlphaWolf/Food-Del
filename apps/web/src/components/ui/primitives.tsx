@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 import { cn } from "@/lib/cn";
@@ -105,18 +105,36 @@ export function Skeleton({ className }: { className?: string }) {
   return <div className={cn("animate-pulse rounded-md bg-paper-deep", className)} aria-hidden />;
 }
 
+/** ids a control should list in `aria-describedby` for its Field's hint and error. */
+export function describedBy(id: string, opts: { hint?: string | null; error?: string | null }) {
+  return (
+    [opts.hint ? `${id}-hint` : null, opts.error ? `${id}-error` : null]
+      .filter(Boolean)
+      .join(" ") || undefined
+  );
+}
+
+/**
+ * A labelled control with optional hint and error. The hint stays visible when there is an
+ * error, and both are linked to the control with `describedBy(id, …)`.
+ */
 export function Field({
   label,
   htmlFor,
   hint,
   error,
+  optional = false,
+  announce = true,
   children,
   className,
 }: {
   label: string;
   htmlFor: string;
-  hint?: string;
+  hint?: string | null;
   error?: string | null;
+  optional?: boolean;
+  /** Announce the error as it appears; turn off when an ErrorSummary already does. */
+  announce?: boolean;
   children: ReactNode;
   className?: string;
 }) {
@@ -124,17 +142,24 @@ export function Field({
     <div className={cn("flex flex-col gap-1.5", className)}>
       <label htmlFor={htmlFor} className="text-sm font-semibold text-ink">
         {label}
+        {optional && <span className="ml-1 font-normal text-ink-muted">(optional)</span>}
       </label>
       {children}
-      {error ? (
-        <p id={`${htmlFor}-error`} className="text-sm text-danger" role="alert">
-          {error}
-        </p>
-      ) : hint ? (
+      {hint && (
         <p id={`${htmlFor}-hint`} className="text-sm text-ink-muted">
           {hint}
         </p>
-      ) : null}
+      )}
+      {error && (
+        <p
+          id={`${htmlFor}-error`}
+          role={announce ? "alert" : undefined}
+          className="flex items-start gap-1.5 text-sm font-medium text-danger"
+        >
+          <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -160,11 +185,14 @@ export function SectionHeading({
   eyebrow,
   title,
   action,
+  id,
   className,
 }: {
   eyebrow?: string;
   title: string;
   action?: ReactNode;
+  /** For `aria-labelledby` on the enclosing section. */
+  id?: string;
   className?: string;
 }) {
   return (
@@ -175,7 +203,9 @@ export function SectionHeading({
             {eyebrow}
           </p>
         )}
-        <h2 className="text-2xl font-bold text-ink md:text-3xl">{title}</h2>
+        <h2 id={id} className="text-2xl font-bold text-ink md:text-3xl">
+          {title}
+        </h2>
       </div>
       {action}
     </div>

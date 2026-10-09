@@ -4,6 +4,7 @@ import { BLACKOUT_SCOPE_VALUES } from "@food-del/domain/contracts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
+import { useOnboardingOptions } from "@/components/ops/common";
 import { OpsShell } from "@/components/ops-shell";
 import { useToast } from "@/components/toast";
 import { Button, Card, Field, Input, Select, Skeleton } from "@/components/ui/primitives";
@@ -16,6 +17,7 @@ function Calendar() {
   const blackouts = useQuery({ queryKey: ["ops-blackouts"], queryFn: api.blackouts });
   const cities = useQuery({ queryKey: ["ops-cities"], queryFn: api.opsCities });
   const vendors = useQuery({ queryKey: ["ops-vendors"], queryFn: api.opsVendors });
+  const options = useOnboardingOptions();
   const [form, setForm] = useState({
     scope: "NATIONAL" as (typeof BLACKOUT_SCOPE_VALUES)[number],
     scopeRef: "",
@@ -41,10 +43,7 @@ function Calendar() {
       : form.scope === "VENDOR"
         ? (vendors.data ?? []).map((v) => ({ id: v.id, name: v.name }))
         : form.scope === "CARRIER"
-          ? [
-              { id: "bluedart", name: "Blue Dart" },
-              { id: "delhivery", name: "Delhivery" },
-            ]
+          ? (options.data?.carriers ?? []).map((c) => ({ id: c.code, name: c.code }))
           : [];
   return (
     <>
