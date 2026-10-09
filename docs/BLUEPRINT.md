@@ -79,20 +79,20 @@ Same-city delivery, COD, multi-vendor hampers, subscriptions, frozen/cooked meal
 | Layer | Choice | Why |
 |---|---|---|
 | Monorepo | pnpm workspaces + Turborepo 2 | Remote caching and task graphs. The standard Next.js + Expo setup. |
-| Web | Next.js 16 App Router, React 19, Tailwind v4, next-intl | Server-rendered catalogue for SEO and speed. Strings are translatable from day one (Hindi and regional languages later). |
+| Web | Next.js 16 App Router, React 19, Tailwind v4 (theme generated from `design-tokens`), TanStack Query | Server-rendered catalogue for SEO and speed. A translation layer (next-intl) arrives with the first regional language. |
 | API | Hono + `@hono/zod-openapi`, versioned REST `/v1`, mounted in Next.js for Phase 1 | Old mobile builds keep working (additive-only `/v1`). Webhooks and partners need REST. One OpenAPI contract serves every client. The app is a package, so it can be deployed standalone later. |
 | Shared domain | Zod 4 schemas, state machines, serviceability and pricing engines as pure TypeScript | Runs in the browser, on the server and in React Native. |
 | Data and backend services | Supabase Mumbai (`ap-south-1`): Postgres, Auth, Storage, Realtime. Drizzle ORM. | Data stays in India (DPDP). SQL-first: constraints, partial indexes, row locks. Clients use Supabase only for auth, live updates and uploads. All writes go through the API. RLS as defence in depth. |
 | Auth | Supabase phone OTP via an MSG91 SMS hook (DLT-compliant). Google sign-in secondary. Roles in custom JWT claims. | Phone OTP is the norm in India. Tokens are verified locally against Supabase's public keys (JWKS). |
 | Payments | Razorpay (UPI, cards, netbanking) + Razorpay Route for vendor splits | UPI-native. Route holds each vendor's settlement until delivery plus the claim window. React Native SDK available for Phase 2. |
 | Logistics | Shiprocket aggregator behind a `CarrierProvider` interface, plus a fake adapter for tests | One API for rates, AWBs, pickups, labels and tracking webhooks. Direct courier contracts can be swapped in later. |
-| Jobs | Inngest | Durable workflows (cutoff → lock batch → book courier → notify), retries, cron. |
+| Jobs | Vercel Cron + transactional outbox ([ADR 0004](adr/0004-scheduling-with-cron-and-outbox.md)) | Every side effect (book courier, notify, refund, payout) is written in the same transaction as the state change, then run with retries and backoff. Cron only supplies the clock. Inngest stays an option if workflows outgrow this. |
 | Notifications | WhatsApp Business API, MSG91 SMS, Resend email | WhatsApp is the main order-update channel in India. |
 | Hosting | Vercel (functions in `bom1` Mumbai) + Supabase Mumbai | App and database in the same region. |
-| Quality | Vitest + fast-check, Playwright, GitHub Actions, Sentry, PostHog | Domain logic is tested exhaustively. End-to-end runs against Razorpay test mode and the fake courier. |
+| Quality | Vitest + fast-check, Playwright, GitHub Actions; Sentry and PostHog at M9 | Domain logic is tested exhaustively. End-to-end runs against Razorpay test mode and the fake courier. |
 
 ```
-            apps/web (Next.js: storefront · /vendor · /admin)        apps/mobile (Expo), Phase 2
+            apps/web (Next.js: storefront · /vendor · /ops)          apps/mobile (Expo), Phase 2
                  │ server components read via core (in-process)             │
                  │ client components ──── HTTPS /api/v1 (OpenAPI) ──────────┘  cookie (web) | Bearer (mobile)
                  ▼
@@ -100,7 +100,7 @@ Same-city delivery, COD, multi-vendor hampers, subscriptions, frozen/cooked meal
    ├─ packages/core ────── use-cases, transactions, outbox (server-only)
    └─ packages/domain ──── pure rules: serviceability, pricing, state machines (shared everywhere)
                  │                                   │
-     Supabase Mumbai (Postgres · Auth · Storage · Realtime)    Inngest jobs → Razorpay · Shiprocket · MSG91 · WhatsApp · Resend
+     Supabase Mumbai (Postgres · Auth · Storage · Realtime)    Vercel Cron → outbox → Razorpay · Shiprocket · MSG91 · WhatsApp · Resend
 ```
 
 ### 3.1 Architecture principles
@@ -233,6 +233,14 @@ CANCELLED   FAILED(VENDOR_UNFULFILLED)                                          
 | M8 | Admin & ops: cities, lanes, blackouts, vendor onboarding, exceptions, claims, payouts | Launch a vendor and city with no deploy. |
 | M9 | Hardening & pilot: 10× festival load test, security, DPDP, monitoring, runbooks | Pilot on 2–3 lanes. |
 
+**Progress (October 2026):** M0–M7 are built and running against the fake payment and courier adapters, with 150+ unit, property and database tests. Playwright journeys run on phone and desktop:
+- **Shopper:** pincode → dated pre-order → pay.
+- **Kitchen and ops:** batch → pack → label → courier scans → delivered.
+
+M8 is partly built. The console handles exceptions, claims, blackouts, and launching or pausing cities and kitchens. Still to come: onboarding a new kitchen, items and lanes from the console (today they come from seed data), and a payouts screen for ops (kitchens already see their own).
+
+Next up are the rest of M8, M9 and the business setup above. Razorpay and Shiprocket are switched on with environment variables (see `.env.example`).
+
 - **Phase 2:** Expo app reusing `domain`, `api-client` and `design-tokens`. Razorpay RN SDK, push notifications, deep links. Optional standalone `apps/api-server`.
 - **Phase 3:** Frozen/cooked meals, learned transit times, hampers and corporate gifting, origin hubs, direct courier contracts, Tier-2 rollout.
 
@@ -243,20 +251,19 @@ CANCELLED   FAILED(VENDOR_UNFULFILLED)                                          
 ```
 food-del/
 ├── apps/
-│   ├── web/                      # Next.js 16: storefront, /vendor, /admin; mounts packages/api at /api/v1
+│   ├── web/                      # Next.js 16: storefront, /vendor, /ops; mounts packages/api at /api/v1
 │   ├── mobile/                   # Phase 2: Expo + Expo Router
 │   └── api-server/               # Phase 2 (optional): standalone Node entry for packages/api
 ├── packages/
 │   ├── domain/                   # PURE TS: schemas, serviceability, pricing, order-state, calendar
 │   ├── db/                       # Drizzle schema, migrations, RLS, seeds
-│   ├── core/                     # server-only use-cases, transactions, outbox
+│   ├── core/                     # server-only use-cases, transactions, outbox, scheduled jobs
 │   ├── api/                      # Hono + zod-openapi /v1, auth middleware, webhooks
 │   ├── api-client/               # typed client + TanStack Query hooks (web + mobile)
 │   ├── integrations/             # payments/razorpay, logistics/shiprocket (+fake), sms, whatsapp, email
-│   ├── jobs/                     # Inngest functions
 │   ├── design-tokens/            # TS tokens → Tailwind v4 @theme (web) + NativeWind preset (mobile)
 │   └── config/                   # shared tsconfig / vitest presets
-├── supabase/                     # config, auth hooks, storage buckets
+├── design-system/               # design rules for every screen (MASTER.md)
 ├── docs/                         # this blueprint, ADRs, runbooks
 └── turbo.json · pnpm-workspace.yaml · package.json · .nvmrc
 ```
