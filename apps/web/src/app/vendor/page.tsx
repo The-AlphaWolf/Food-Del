@@ -73,10 +73,17 @@ function Overview() {
             <Card className="flex items-center gap-4 p-4">
               <IndianRupee className="size-6 text-jaggery" aria-hidden />
               <div>
-                <p className="text-sm text-ink-muted">
-                  Payouts on hold (released 24 h after delivery)
-                </p>
+                <p className="text-sm text-ink-muted">Payouts on hold</p>
                 <p className="tabular text-xl font-bold">{formatINR(o.payouts.onHoldPaise)}</p>
+                {o.payouts.accountLinked ? (
+                  <p className="text-xs text-ink-muted">
+                    Paid 24 h after delivery if there's no claim.
+                  </p>
+                ) : (
+                  <p className="text-xs font-semibold text-warning">
+                    Waiting for your bank account: ask Food-Del ops to link your Razorpay account.
+                  </p>
+                )}
               </div>
             </Card>
             <Card className="flex items-center gap-4 p-4">

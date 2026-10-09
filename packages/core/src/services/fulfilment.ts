@@ -243,7 +243,11 @@ export class FulfilmentService {
           !isWeekdayInMask(vendor.schedule.dispatchWeekdays, isoWeekday(date)) ||
           closedDates.has(date),
       })),
-      payouts: { onHoldPaise: payouts?.onHold ?? 0, releasedPaise: payouts?.released ?? 0 },
+      payouts: {
+        onHoldPaise: payouts?.onHold ?? 0,
+        releasedPaise: payouts?.released ?? 0,
+        accountLinked: Boolean(vendor.raw.payoutAccountRef),
+      },
     };
   }
 
@@ -424,7 +428,7 @@ export class FulfilmentService {
     });
     // Book now so the kitchen can print the label while the box is on the counter. A courier
     // failure is logged and left to the outbox's retries; the parcel is packed either way.
-    await this.outbox?.processFor("carrier.book", shipmentId).catch((e: unknown) => {
+    await this.outbox?.processFor("carrier.book", { shipmentId }).catch((e: unknown) => {
       this.deps.logger.warn("immediate courier booking failed", {
         shipmentId,
         error: e instanceof Error ? e.message : String(e),

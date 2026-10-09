@@ -21,8 +21,13 @@ const nextId = (prefix: string) =>
 export class FakePaymentProvider implements PaymentProvider {
   readonly name = "FAKE" as const;
   readonly refunds: { providerPaymentId: string; amountPaise: number }[] = [];
-  readonly transfers: { id: string; accountRef: string; amountPaise: number; released: boolean }[] =
-    [];
+  readonly transfers: {
+    id: string;
+    accountRef: string;
+    amountPaise: number;
+    released: boolean;
+    reversed: boolean;
+  }[] = [];
 
   async createOrder(input: CreatePaymentOrderInput): Promise<PaymentOrder> {
     const providerOrderId = nextId("order");
@@ -64,6 +69,7 @@ export class FakePaymentProvider implements PaymentProvider {
       accountRef: input.accountRef,
       amountPaise: input.amountPaise,
       released: false,
+      reversed: false,
     });
     return id;
   }
@@ -71,6 +77,12 @@ export class FakePaymentProvider implements PaymentProvider {
   async releaseTransfer(providerTransferId: string): Promise<void> {
     const t = this.transfers.find((x) => x.id === providerTransferId);
     if (t) t.released = true;
+  }
+
+  async reverseTransfer(providerTransferId: string): Promise<string> {
+    const t = this.transfers.find((x) => x.id === providerTransferId);
+    if (t) t.reversed = true;
+    return nextId("rvrsl");
   }
 
   static sign(payload: string): string {

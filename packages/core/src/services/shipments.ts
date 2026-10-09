@@ -122,7 +122,8 @@ export type OutboxMessage =
     }
   | { topic: "carrier.book"; payload: { shipmentId: string } }
   | { topic: "payment.refund"; payload: { refundId: string } }
-  | { topic: "payout.transfer"; payload: { payoutId: string } };
+  | { topic: "payout.transfer"; payload: { payoutId: string } }
+  | { topic: "payout.reverse"; payload: { payoutId: string } };
 
 /** Record a side effect to run after this transaction commits. */
 export async function enqueue(

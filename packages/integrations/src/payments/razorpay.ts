@@ -167,7 +167,6 @@ export class RazorpayProvider implements PaymentProvider {
     providerPaymentId: string;
     accountRef: string;
     amountPaise: number;
-    holdUntil: Date;
   }): Promise<string> {
     const r = await this.call<{ items: { id: string }[] }>(
       `/payments/${encodeURIComponent(input.providerPaymentId)}/transfers`,
@@ -178,8 +177,8 @@ export class RazorpayProvider implements PaymentProvider {
             account: input.accountRef,
             amount: input.amountPaise,
             currency: "INR",
+            // No on_hold_until: Razorpay would settle on that date even if a claim is open.
             on_hold: true,
-            on_hold_until: Math.floor(input.holdUntil.getTime() / 1000),
           },
         ],
       },
@@ -193,5 +192,14 @@ export class RazorpayProvider implements PaymentProvider {
     await this.call(`/transfers/${encodeURIComponent(providerTransferId)}`, "PATCH", {
       on_hold: false,
     });
+  }
+
+  async reverseTransfer(providerTransferId: string, amountPaise: number): Promise<string> {
+    const r = await this.call<{ id: string }>(
+      `/transfers/${encodeURIComponent(providerTransferId)}/reversals`,
+      "POST",
+      { amount: amountPaise },
+    );
+    return r.id;
   }
 }

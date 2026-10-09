@@ -77,6 +77,48 @@ describe("Razorpay signatures", () => {
       `Basic ${Buffer.from("k:s").toString("base64")}`,
     );
   });
+
+  it("routes a vendor share on hold with no automatic release date", async () => {
+    const calls: { url: string; init: RequestInit }[] = [];
+    const provider = new RazorpayProvider({
+      keyId: "k",
+      keySecret: "s",
+      webhookSecret: "w",
+      brandName: "Food-Del",
+      fetch: async (url, init) => {
+        calls.push({ url: String(url), init: init! });
+        return new Response(JSON.stringify({ items: [{ id: "trf_1" }] }), { status: 200 });
+      },
+    });
+    const id = await provider.transferToVendor({
+      providerPaymentId: "pay_1",
+      accountRef: "acc_1",
+      amountPaise: 52000,
+    });
+    expect(id).toBe("trf_1");
+    expect(calls[0]!.url).toBe("https://api.razorpay.com/v1/payments/pay_1/transfers");
+    expect(JSON.parse(String(calls[0]!.init.body))).toEqual({
+      transfers: [{ account: "acc_1", amount: 52000, currency: "INR", on_hold: true }],
+    });
+  });
+
+  it("claws back a Route transfer through the reversals API", async () => {
+    const calls: { url: string; init: RequestInit }[] = [];
+    const provider = new RazorpayProvider({
+      keyId: "k",
+      keySecret: "s",
+      webhookSecret: "w",
+      brandName: "Food-Del",
+      fetch: async (url, init) => {
+        calls.push({ url: String(url), init: init! });
+        return new Response(JSON.stringify({ id: "rvrsl_1", amount: 52000 }), { status: 200 });
+      },
+    });
+    expect(await provider.reverseTransfer("trf_9", 52000)).toBe("rvrsl_1");
+    expect(calls[0]!.url).toBe("https://api.razorpay.com/v1/transfers/trf_9/reversals");
+    expect(calls[0]!.init.method).toBe("POST");
+    expect(JSON.parse(String(calls[0]!.init.body))).toEqual({ amount: 52000 });
+  });
 });
 
 describe("Fake payments", () => {

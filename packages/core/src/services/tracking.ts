@@ -1,11 +1,49 @@
-import { isUniqueViolation, schema } from "@food-del/db";
+import { type Executor, isUniqueViolation, schema } from "@food-del/db";
 import { addHours, applyBps, decideCarrierEvent, IN_FLIGHT_STATUSES } from "@food-del/domain";
 import type { CarrierEvent } from "@food-del/integrations";
-import { and, eq, inArray, lte, sql } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull, lte, sql } from "drizzle-orm";
 import type { CoreDeps } from "../deps";
 import { enqueue, transitionShipment } from "./shipments";
 
-const { claims, payments, shipments, vendorPayouts, vendors } = schema;
+const { claims, outbox, payments, shipments, vendorPayouts, vendors } = schema;
+
+/**
+ * Queue the provider transfer for a payout unless one is already waiting or parked as failed
+ * (a failed one is retried deliberately by ops, not re-queued on every run).
+ */
+export async function queueTransfer(tx: Executor, payoutId: string): Promise<boolean> {
+  const [queued] = await tx
+    .select({ id: outbox.id })
+    .from(outbox)
+    .where(
+      and(
+        eq(outbox.topic, "payout.transfer"),
+        inArray(outbox.status, ["PENDING", "FAILED"]),
+        sql`${outbox.payload}->>'payoutId' = ${payoutId}`,
+      ),
+    )
+    .limit(1);
+  if (queued) return false;
+  await enqueue(tx, { topic: "payout.transfer", payload: { payoutId } });
+  return true;
+}
+
+/** A kitchen just linked its payout account: transfer everything it's owed but not yet sent. */
+export async function queuePendingTransfers(tx: Executor, vendorId: string): Promise<number> {
+  const pending = await tx
+    .select({ id: vendorPayouts.id })
+    .from(vendorPayouts)
+    .where(
+      and(
+        eq(vendorPayouts.vendorId, vendorId),
+        eq(vendorPayouts.status, "ON_HOLD"),
+        isNull(vendorPayouts.providerTransferId),
+      ),
+    );
+  let queued = 0;
+  for (const p of pending) if (await queueTransfer(tx, p.id)) queued++;
+  return queued;
+}
 
 export type CarrierEventOutcome =
   | "applied"
@@ -156,9 +194,7 @@ export class TrackingService {
       })
       .onConflictDoNothing()
       .returning({ id: vendorPayouts.id });
-    if (payout && row.v.payoutAccountRef) {
-      await enqueue(tx, { topic: "payout.transfer", payload: { payoutId: payout.id } });
-    }
+    if (payout && row.v.payoutAccountRef) await queueTransfer(tx, payout.id);
   }
 
   /** Route a vendor's held share through the payment provider (outbox handler). */
@@ -169,7 +205,7 @@ export class TrackingService {
       .innerJoin(vendors, eq(vendors.id, vendorPayouts.vendorId))
       .innerJoin(shipments, eq(shipments.id, vendorPayouts.shipmentId))
       .where(eq(vendorPayouts.id, payoutId));
-    if (!row || row.p.providerTransferId || !row.v.payoutAccountRef) return;
+    if (row?.p.status !== "ON_HOLD" || row.p.providerTransferId || !row.v.payoutAccountRef) return;
     const [payment] = await tx
       .select()
       .from(payments)
@@ -179,12 +215,12 @@ export class TrackingService {
           inArray(payments.status, ["CAPTURED", "PARTIALLY_REFUNDED"]),
         ),
       );
-    if (!payment?.providerPaymentId) return;
+    // Retried with backoff, then parked as failed for ops: the payout stays unpaid, never "released".
+    if (!payment?.providerPaymentId) throw new Error("no captured payment to transfer from");
     const transferId = await this.deps.payments.transferToVendor({
       providerPaymentId: payment.providerPaymentId,
       accountRef: row.v.payoutAccountRef,
       amountPaise: row.p.netPaise,
-      holdUntil: row.p.releaseAfter,
     });
     await tx
       .update(vendorPayouts)
@@ -192,28 +228,63 @@ export class TrackingService {
       .where(eq(vendorPayouts.id, payoutId));
   }
 
-  /** Release held payouts whose claim window has closed without an open claim. */
+  /**
+   * Release payouts whose claim window has closed, with no open claim and no review hold. Money
+   * only moves through a provider transfer, so a payout without one is never marked paid: its
+   * transfer is queued (when the kitchen has a payout account) and it's released on a later run.
+   */
   async releasePayouts(limit = 200): Promise<number> {
     const now = this.deps.clock();
     const due = await this.deps.db
-      .select()
+      .select({ p: vendorPayouts, accountRef: vendors.payoutAccountRef })
       .from(vendorPayouts)
+      .innerJoin(vendors, eq(vendors.id, vendorPayouts.vendorId))
       .where(
         and(
           eq(vendorPayouts.status, "ON_HOLD"),
           lte(vendorPayouts.releaseAfter, now),
+          isNull(vendorPayouts.heldReason),
           sql`not exists (select 1 from ${claims} c where c.shipment_id = ${vendorPayouts.shipmentId} and c.status = 'OPEN')`,
         ),
       )
       .limit(limit);
-    for (const p of due) {
-      if (p.providerTransferId) await this.deps.payments.releaseTransfer(p.providerTransferId);
-      await this.deps.db
+    let released = 0;
+    for (const { p, accountRef } of due) {
+      if (!p.providerTransferId) {
+        if (accountRef) await queueTransfer(this.deps.db, p.id);
+        continue;
+      }
+      await this.deps.payments.releaseTransfer(p.providerTransferId);
+      const done = await this.deps.db
         .update(vendorPayouts)
         .set({ status: "RELEASED", releasedAt: now })
-        .where(and(eq(vendorPayouts.id, p.id), eq(vendorPayouts.status, "ON_HOLD")));
+        .where(and(eq(vendorPayouts.id, p.id), eq(vendorPayouts.status, "ON_HOLD")))
+        .returning({ id: vendorPayouts.id });
+      released += done.length;
     }
-    return due.length;
+    return released;
+  }
+
+  /** Take back a clawed-back payout's transfer from the kitchen's account (outbox handler). */
+  async reversePayout(tx: Executor, payoutId: string): Promise<void> {
+    const [p] = await tx
+      .select()
+      .from(vendorPayouts)
+      .where(
+        and(
+          eq(vendorPayouts.id, payoutId),
+          eq(vendorPayouts.status, "REVERSED"),
+          isNotNull(vendorPayouts.providerTransferId),
+          isNull(vendorPayouts.providerReversalId),
+        ),
+      )
+      .for("update");
+    if (!p) return;
+    const reversalId = await this.deps.payments.reverseTransfer(p.providerTransferId!, p.netPaise);
+    await tx
+      .update(vendorPayouts)
+      .set({ providerReversalId: reversalId })
+      .where(eq(vendorPayouts.id, payoutId));
   }
 
   /**

@@ -40,12 +40,15 @@ export class OutboxProcessor {
    * Only untried messages are taken, so one in backoff keeps its schedule; a failure here leaves
    * the message on the normal retry path.
    */
-  async processFor(topic: OutboxMessage["topic"], shipmentId: string): Promise<number> {
+  async processFor(
+    topic: OutboxMessage["topic"],
+    match: { shipmentId: string } | { payoutId: string },
+  ): Promise<number> {
     let processed = 0;
     const filter = and(
       eq(outbox.topic, topic),
       eq(outbox.attempts, 0),
-      sql`${outbox.payload}->>'shipmentId' = ${shipmentId}`,
+      ...Object.entries(match).map(([key, value]) => sql`${outbox.payload}->>${key} = ${value}`),
     );
     while (await this.processOne(filter)) processed++;
     return processed;
@@ -118,6 +121,8 @@ export class OutboxProcessor {
         return this.refund(tx, msg.payload.refundId);
       case "payout.transfer":
         return this.services.tracking.transferPayout(tx, msg.payload.payoutId);
+      case "payout.reverse":
+        return this.services.tracking.reversePayout(tx, msg.payload.payoutId);
     }
   }
 

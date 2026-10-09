@@ -15,6 +15,13 @@
       "when": 1791517250854,
       "tag": "0001_rls_and_auth",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791563365952,
+      "tag": "0002_payout_review_and_reversals",
+      "breakpoints": true
     }
   ]
 }

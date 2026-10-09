@@ -89,7 +89,12 @@ export const VendorOverviewSchema = z
         closed: z.boolean(),
       }),
     ),
-    payouts: z.object({ onHoldPaise: Money, releasedPaise: Money }),
+    payouts: z.object({
+      onHoldPaise: Money,
+      releasedPaise: Money,
+      /** Without a linked Razorpay Route account, held payouts can't be paid out. */
+      accountLinked: z.boolean(),
+    }),
   })
   .meta({ id: "VendorOverview" });
 export type VendorOverview = z.infer<typeof VendorOverviewSchema>;

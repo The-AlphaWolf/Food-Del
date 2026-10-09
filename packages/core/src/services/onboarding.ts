@@ -41,6 +41,7 @@ import { conflict, invalid, notFound } from "../errors";
 import { iso } from "../mappers";
 import { invalidateReference, loadReference, PlanningLoader } from "../planning";
 import { requireStaff, type Viewer } from "../viewer";
+import { queuePendingTransfers } from "./tracking";
 
 const {
   categories,
@@ -321,7 +322,13 @@ export class OnboardingService {
       };
     }
     if (Object.keys(set).length > 0) {
-      await this.db.update(vendors).set(set).where(eq(vendors.id, id));
+      await this.db.transaction(async (tx) => {
+        await tx.update(vendors).set(set).where(eq(vendors.id, id));
+        // Linking a payout account sends everything the kitchen is owed but hasn't been sent.
+        if (patch.payoutAccountRef && patch.payoutAccountRef !== current.payoutAccountRef) {
+          await queuePendingTransfers(tx, id);
+        }
+      });
     }
     // A live kitchen that becomes unready (e.g. licence lapses) stays live; ops sees the checklist.
     return this.kitchen(viewer, id);

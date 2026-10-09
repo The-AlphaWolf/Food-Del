@@ -313,8 +313,30 @@ describe("full lifecycle: pay → batch → pack → fly → deliver → payout"
     expect(payout).toMatchObject({ status: "ON_HOLD" });
     expect(payout!.netPaise).toBe(payout!.grossPaise - payout!.commissionPaise);
     expect(await t.core.runJob("release-payouts")).toMatchObject({ processed: 0 });
+  });
+
+  it("never marks a payout paid without a transfer, and pays once an account is linked", async () => {
     t.clock.advanceHours(25);
+    // The kitchen has no payout account: the window has closed but no money can move.
+    expect(await t.core.runJob("release-payouts")).toMatchObject({ processed: 0 });
+    const stuck = (await t.core.payouts.list(ops, { state: "NEEDS_PAYOUT_ACCOUNT" })).find(
+      (p) => p.shipmentId === shipmentId,
+    );
+    expect(stuck).toMatchObject({ status: "ON_HOLD", needsAction: true, transferId: null });
+
+    const kitchenId = (await t.core.catalog.getItem("kaju-katli")).vendor.id;
+    await t.core.onboarding.updateKitchen(ops, kitchenId, { payoutAccountRef: "acc_delhi_halwai" });
+    await t.core.runJob("process-outbox");
+    const transfer = t.payments.transfers.find((x) => x.accountRef === "acc_delhi_halwai");
+    expect(transfer).toMatchObject({ amountPaise: stuck!.netPaise, released: false });
+
     expect(await t.core.runJob("release-payouts")).toMatchObject({ processed: 1 });
+    expect(transfer!.released).toBe(true);
+    expect(await t.core.payouts.get(ops, stuck!.id)).toMatchObject({
+      status: "RELEASED",
+      state: "RELEASED",
+      transferId: expect.stringMatching(/^trf_/),
+    });
   });
 });
 
@@ -431,6 +453,10 @@ describe("kitchen shortfall, risk and claims", () => {
     const awb = (await t.core.orders.get(customer, placed.order.id)).shipments[0]!.awbNumber!;
     await carrierEvent(awb, "DELIVERED", atIst("2026-10-21", "12:00"));
     t.clock.set(atIst("2026-10-21", "14:00"));
+    // The kitchen's share is already routed to its account, on hold.
+    await t.core.runJob("process-outbox");
+    const transfersBefore = t.payments.transfers.length;
+    expect(t.payments.transfers.at(-1)).toMatchObject({ released: false, reversed: false });
 
     const claim = await t.core.claims.create(customer, id, {
       kind: "DAMAGED",
@@ -446,6 +472,17 @@ describe("kitchen shortfall, risk and claims", () => {
       .from(schema.vendorPayouts)
       .where(eq(schema.vendorPayouts.shipmentId, id));
     expect(payout!.status).toBe("REVERSED");
+    expect(payout!.reversedAt).not.toBeNull();
+    expect((await t.core.payouts.get(ops, payout!.id)).state).toBe("REVERSAL_PENDING");
+
+    // …and taken back from the kitchen's account.
+    await t.core.runJob("process-outbox");
+    expect(t.payments.transfers).toHaveLength(transfersBefore);
+    expect(t.payments.transfers.at(-1)!.reversed).toBe(true);
+    expect(await t.core.payouts.get(ops, payout!.id)).toMatchObject({
+      state: "CLAWED_BACK",
+      reversalId: expect.stringMatching(/^rvrsl_/),
+    });
   });
 
   it("still packs when the courier is down, and books on the outbox retry", async () => {

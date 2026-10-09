@@ -114,11 +114,18 @@ export class ClaimService {
           amountPaise: refundPaise,
           reason: `Claim ${row.c.kind.toLowerCase()}`,
         });
-        // The vendor isn't paid for food that arrived spoiled.
-        await tx
+        // The vendor isn't paid for food that arrived spoiled; money already routed to them on
+        // hold is taken back from their account.
+        const reversed = await tx
           .update(vendorPayouts)
-          .set({ status: "REVERSED" })
-          .where(and(eq(vendorPayouts.shipmentId, row.s.id), eq(vendorPayouts.status, "ON_HOLD")));
+          .set({ status: "REVERSED", reversedAt: now, heldReason: null, heldAt: null })
+          .where(and(eq(vendorPayouts.shipmentId, row.s.id), eq(vendorPayouts.status, "ON_HOLD")))
+          .returning({ id: vendorPayouts.id, transferId: vendorPayouts.providerTransferId });
+        for (const p of reversed) {
+          if (p.transferId) {
+            await enqueue(tx, { topic: "payout.reverse", payload: { payoutId: p.id } });
+          }
+        }
       }
       const [claim] = await tx
         .update(claims)

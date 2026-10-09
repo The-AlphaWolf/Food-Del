@@ -313,11 +313,19 @@ export const vendorPayouts = pgTable(
     releaseAfter: timestamp("release_after", { withTimezone: true }).notNull(),
     providerTransferId: text("provider_transfer_id"),
     releasedAt: timestamp("released_at", { withTimezone: true }),
+    /** Ops paused this payout (e.g. a quality investigation); the release job skips it. */
+    heldReason: text("held_reason"),
+    heldAt: timestamp("held_at", { withTimezone: true }),
+    /** Clawed back after an approved claim; the provider reversal of any transfer follows. */
+    reversedAt: timestamp("reversed_at", { withTimezone: true }),
+    providerReversalId: text("provider_reversal_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     check("payouts_math", sql`${t.netPaise} = ${t.grossPaise} - ${t.commissionPaise}`),
+    check("payouts_hold_reason", sql`(${t.heldReason} is null) = (${t.heldAt} is null)`),
     index("payouts_release_idx").on(t.releaseAfter).where(sql`${t.status} = 'ON_HOLD'`),
+    index("payouts_vendor_idx").on(t.vendorId, t.createdAt),
   ],
 );
 

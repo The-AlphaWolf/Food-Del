@@ -78,14 +78,19 @@ export interface PaymentProvider {
     notes?: Record<string, string>;
   }): Promise<RefundResult>;
   /**
-   * Route the vendor's share of a captured payment to their linked account, held until
-   * `holdUntil`. Returns the provider transfer id.
+   * Route the vendor's share of a captured payment to their linked account, on hold with no
+   * automatic release date: only `releaseTransfer` settles it, so claims and review holds on our
+   * side really do stop the money. Returns the provider transfer id.
    */
   transferToVendor(input: {
     providerPaymentId: string;
     accountRef: string;
     amountPaise: Paise;
-    holdUntil: Date;
   }): Promise<string>;
   releaseTransfer(providerTransferId: string): Promise<void>;
+  /**
+   * Take a vendor transfer back into the platform account (a clawback after an approved claim).
+   * Returns the provider reversal id.
+   */
+  reverseTransfer(providerTransferId: string, amountPaise: Paise): Promise<string>;
 }
