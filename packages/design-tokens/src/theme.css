@@ -1,0 +1,44 @@
+/* Generated from src/index.ts by `pnpm --filter @food-del/design-tokens build:css`. Do not edit. */
+@theme {
+  --color-paper: #FFF9F0;
+  --color-paper-deep: #F7EBDA;
+  --color-card: #FFFFFF;
+  --color-ink: #2A1609;
+  --color-ink-soft: #5B4636;
+  --color-ink-muted: #7A6453;
+  --color-line: #E8D8C3;
+  --color-line-strong: #D4BFA4;
+  --color-jaggery: #8A3B0C;
+  --color-jaggery-deep: #6B2D08;
+  --color-on-jaggery: #FFFFFF;
+  --color-saffron: #E39A2B;
+  --color-saffron-soft: #FCEBCF;
+  --color-on-saffron: #2A1609;
+  --color-rose: #B23A48;
+  --color-chilled: #0F6E80;
+  --color-chilled-soft: #E1F2F4;
+  --color-ambient: #8A5A17;
+  --color-ambient-soft: #F7ECD9;
+  --color-veg: #1B7A3A;
+  --color-non-veg: #8B2A1A;
+  --color-egg: #B7791F;
+  --color-success: #1B7A3A;
+  --color-success-soft: #E3F3E8;
+  --color-warning: #9A5B00;
+  --color-warning-soft: #FFF1D6;
+  --color-danger: #B42318;
+  --color-danger-soft: #FDE8E6;
+  --color-info: #2F4A9E;
+  --color-info-soft: #E7ECFB;
+  --color-focus: #1D4ED8;
+  --font-display: "Playfair Display Variable", "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-sans: "Karla Variable", "Karla", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+  --shadow-card: 0 1px 2px rgba(42, 22, 9, 0.06), 0 4px 16px rgba(42, 22, 9, 0.06);
+  --shadow-lift: 0 2px 4px rgba(42, 22, 9, 0.08), 0 12px 32px rgba(42, 22, 9, 0.12);
+}
