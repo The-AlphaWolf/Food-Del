@@ -10,6 +10,7 @@ import {
   PincodeLookupSchema,
   QuoteRequestSchema,
   QuoteSchema,
+  ReadinessSchema,
   VendorDetailSchema,
 } from "@food-del/domain/contracts";
 import { createRoute } from "@hono/zod-openapi";
@@ -28,6 +29,23 @@ export function registerPublicRoutes(app: App) {
       responses: { 200: json(z.object({ ok: z.literal(true), time: z.string() })) },
     }),
     async (c) => c.json(await c.get("core").health(), 200),
+  );
+
+  app.openapi(
+    createRoute({
+      method: "get",
+      path: "/v1/health/ready",
+      tags: ["System"],
+      summary: "Readiness for uptime monitors",
+      description:
+        "200 when the database answers and queued work is being processed on schedule; 503 otherwise. Ops see the detail at /v1/ops/health.",
+      responses: { 200: json(ReadinessSchema), 503: json(ReadinessSchema) },
+    }),
+    async (c) => {
+      c.header("Cache-Control", "no-store");
+      const ready = await c.get("core").monitoring.ready();
+      return ready ? c.json({ ready }, 200) : c.json({ ready }, 503);
+    },
   );
 
   app.openapi(

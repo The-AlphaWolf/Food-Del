@@ -10,6 +10,7 @@ import {
   OpsTransitionRequestSchema,
   OpsVendorSchema,
   ResolveClaimRequestSchema,
+  SystemHealthSchema,
   UpdateCityRequestSchema,
   UpdateVendorRequestSchema,
 } from "@food-del/domain/contracts";
@@ -32,6 +33,21 @@ export function registerOpsRoutes(app: App) {
       responses: { 200: json(OpsOverviewSchema), ...staff },
     }),
     async (c) => c.json(await c.get("core").ops.overview(c.get("viewer")), 200),
+  );
+
+  app.openapi(
+    createRoute({
+      method: "get",
+      path: "/v1/ops/health",
+      tags,
+      security: bearer,
+      summary: "Scheduled jobs, queued work and signs of life from providers",
+      responses: { 200: json(SystemHealthSchema), ...staff },
+    }),
+    async (c) => {
+      c.header("Cache-Control", "no-store");
+      return c.json(await c.get("core").monitoring.system(c.get("viewer")), 200);
+    },
   );
 
   app.openapi(

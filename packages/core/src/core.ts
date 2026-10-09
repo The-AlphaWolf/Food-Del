@@ -6,6 +6,7 @@ import { AccountService } from "./services/accounts";
 import { CatalogService } from "./services/catalog";
 import { ClaimService } from "./services/claims";
 import { FulfilmentService } from "./services/fulfilment";
+import { HealthService } from "./services/health";
 import { NotificationService } from "./services/notifications";
 import { OnboardingService } from "./services/onboarding";
 import { OpsService } from "./services/ops";
@@ -27,6 +28,7 @@ export function createCore(deps: CoreDeps) {
   fulfilment.attachOutbox(outbox);
   const payouts = new PayoutService(deps, outbox);
   const rateLimits = new RateLimiter(deps);
+  const health = new HealthService(deps);
 
   const jobs: Record<JobName, () => Promise<number>> = {
     "lock-batches": () => fulfilment.lockDueBatches(),
@@ -35,7 +37,7 @@ export function createCore(deps: CoreDeps) {
     "release-payouts": () => tracking.releasePayouts(),
     "materialize-slots": () => materializeInventorySlots(deps.db, { days: 30, now: deps.clock() }),
     "process-outbox": () => outbox.process(100),
-    housekeeping: () => rateLimits.prune(),
+    housekeeping: async () => (await rateLimits.prune()) + (await health.pruneJobRuns()),
   };
 
   return {
@@ -52,6 +54,7 @@ export function createCore(deps: CoreDeps) {
     onboarding: new OnboardingService(deps),
     payouts,
     rateLimits,
+    monitoring: health,
     notifications,
     outbox,
     /** Liveness plus a database round-trip. */
@@ -60,7 +63,7 @@ export function createCore(deps: CoreDeps) {
       return { ok: true, time: deps.clock().toISOString() };
     },
     async runJob(job: JobName): Promise<JobResult> {
-      const processed = await jobs[job]();
+      const processed = await health.record(job, jobs[job]);
       return { job, processed };
     },
   };

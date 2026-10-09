@@ -1,21 +1,11 @@
 "use client";
 
-import { JOB_NAMES, type JobName } from "@food-del/domain/contracts";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  AlertTriangle,
-  CheckCircle2,
-  ChefHat,
-  Clock,
-  Inbox,
-  Plane,
-  RotateCcw,
-  Wallet,
-} from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { AlertTriangle, CheckCircle2, ChefHat, Clock, Inbox, Plane, Wallet } from "lucide-react";
+import { JOB_LABELS, SystemHealthPanel } from "@/components/ops/system-health";
 import { OpsShell } from "@/components/ops-shell";
 import { OpsShipmentsTable } from "@/components/ops-shipments-table";
-import { useToast } from "@/components/toast";
-import { Button, Card, Skeleton } from "@/components/ui/primitives";
+import { Card, Skeleton } from "@/components/ui/primitives";
 import { api } from "@/lib/api";
 import { formatDateTime, formatINR } from "@/lib/format";
 
@@ -41,32 +31,11 @@ function Tile({
   );
 }
 
-/** What each scheduled job does, in ops language. Vercel Cron runs them; these buttons run one now. */
-const JOB_LABELS: Record<JobName, string> = {
-  "lock-batches": "Lock batches at cutoff",
-  "expire-holds": "Release unpaid holds",
-  "monitor-at-risk": "Check at-risk parcels",
-  "release-payouts": "Release payouts",
-  "materialize-slots": "Open order book",
-  "process-outbox": "Send queued work",
-  housekeeping: "Tidy up old records",
-};
-
 function Overview() {
-  const qc = useQueryClient();
-  const toast = useToast();
   const overview = useQuery({
     queryKey: ["ops-overview"],
     queryFn: api.opsOverview,
     refetchInterval: 30_000,
-  });
-  const run = useMutation({
-    mutationFn: (job: JobName) => api.runJob(job),
-    onSuccess: (r) => {
-      toast("success", `${JOB_LABELS[r.job]}: ${r.processed} done`);
-      void qc.invalidateQueries({ predicate: (q) => String(q.queryKey[0]).startsWith("ops") });
-    },
-    onError: (e) => toast("error", (e as Error).message),
   });
   const o = overview.data;
   return (
@@ -79,22 +48,6 @@ function Overview() {
               As of {formatDateTime(o.asOf)} · refreshes every 30 s
             </p>
           )}
-        </div>
-        <div className="flex flex-wrap items-center gap-2" role="group" aria-labelledby="run-now">
-          <span id="run-now" className="text-xs font-bold uppercase tracking-wider text-ink-muted">
-            Run now
-          </span>
-          {JOB_NAMES.map((j) => (
-            <Button
-              key={j}
-              size="sm"
-              variant="secondary"
-              loading={run.isPending && run.variables === j}
-              onClick={() => run.mutate(j)}
-            >
-              <RotateCcw className="size-3.5" aria-hidden /> {JOB_LABELS[j]}
-            </Button>
-          ))}
         </div>
       </div>
       {!o ? (
@@ -157,6 +110,7 @@ function Overview() {
           </Card>
         </>
       )}
+      <SystemHealthPanel />
     </>
   );
 }

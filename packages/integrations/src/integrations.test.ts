@@ -5,6 +5,7 @@ import {
   parseShiprocketTime,
   ShiprocketProvider,
 } from "./logistics/shiprocket";
+import { parseSentryDsn, SentryReporter } from "./monitoring/sentry";
 import { FakePaymentProvider } from "./payments/fake";
 import { RazorpayProvider } from "./payments/razorpay";
 
@@ -170,5 +171,59 @@ describe("Shiprocket mapping", () => {
     expect(e).toMatchObject({ awbNumber: "1234", status: "OUT_FOR_LOCAL_DELIVERY" });
     expect(sr.parseWebhook(body)[0]!.externalEventId).toBe(e!.externalEventId);
     expect(e!.etaAt?.toISOString()).toBe("2026-10-23T12:30:00.000Z");
+  });
+});
+
+describe("Sentry reporting", () => {
+  it("parses a DSN", () => {
+    expect(parseSentryDsn("https://abc123@o42.ingest.sentry.io/789")).toEqual({
+      key: "abc123",
+      host: "o42.ingest.sentry.io",
+      projectId: "789",
+      protocol: "https",
+    });
+    expect(() => parseSentryDsn("https://o42.ingest.sentry.io/789")).toThrow();
+  });
+
+  it("sends an envelope with the stack and without personal data", async () => {
+    const sent: { url: string; init: RequestInit }[] = [];
+    const reporter = new SentryReporter(
+      "https://abc123@o42.ingest.sentry.io/789",
+      { environment: "test" },
+      (async (url: string, init: RequestInit) => {
+        sent.push({ url, init });
+        return new Response("{}");
+      }) as typeof fetch,
+    );
+    const err = new Error("boom");
+    await reporter.capture({
+      message: "job failed",
+      level: "error",
+      data: { job: "release-payouts", error: err.message, stack: err.stack, phone: "9811122233" },
+    });
+    expect(sent).toHaveLength(1);
+    expect(sent[0]!.url).toBe("https://o42.ingest.sentry.io/api/789/envelope/");
+    expect(String(new Headers(sent[0]!.init.headers).get("x-sentry-auth"))).toContain(
+      "sentry_key=abc123",
+    );
+    const [, item, body] = String(sent[0]!.init.body).split("\n");
+    expect(JSON.parse(item!)).toEqual({ type: "event" });
+    const event = JSON.parse(body!);
+    expect(event.environment).toBe("test");
+    expect(event.exception.values[0].value).toBe("boom");
+    expect(event.exception.values[0].stacktrace.frames.length).toBeGreaterThan(0);
+    expect(event.extra).toEqual({ job: "release-payouts", error: "boom", phone: "[redacted]" });
+    expect(String(sent[0]!.init.body)).not.toContain("9811122233");
+  });
+
+  it("never throws when Sentry is unreachable", async () => {
+    const reporter = new SentryReporter(
+      "https://abc123@o42.ingest.sentry.io/789",
+      { environment: "test" },
+      (async () => {
+        throw new Error("offline");
+      }) as typeof fetch,
+    );
+    await expect(reporter.capture({ message: "x", level: "error" })).resolves.toBeUndefined();
   });
 });

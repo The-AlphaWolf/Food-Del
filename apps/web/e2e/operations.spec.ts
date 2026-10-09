@@ -78,3 +78,18 @@ test("kitchen and ops take an order from payment to doorstep", async ({ browser 
   await expect(customer.getByRole("heading", { level: 1, name: "Completed" })).toBeVisible();
   await expect(customer.getByText("Something not right with this parcel?")).toBeVisible();
 });
+
+test("ops sees whether scheduled jobs are running and can run one now", async ({ page }) => {
+  await page.goto("/ops");
+  await signIn(page, OPS_PHONE);
+  const main = page.getByRole("main");
+  await expect(main.getByRole("heading", { name: "System health" })).toBeVisible();
+  const jobs = main.getByRole("list", { name: "System health" });
+  const outbox = jobs.getByRole("listitem", { name: "Send queued work" });
+  await expect(outbox).toContainText("Runs every minute");
+
+  await outbox.getByRole("button", { name: "Run Send queued work now" }).click();
+  await expect(page.getByText(/Send queued work: \d+ done/)).toBeVisible();
+  await expect(outbox).toContainText("On schedule");
+  await expect(outbox).toContainText(/last \d+ min ago/);
+});

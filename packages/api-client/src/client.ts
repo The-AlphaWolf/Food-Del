@@ -48,6 +48,7 @@ import type {
   RouteInput,
   Session,
   SetItemStatusRequest,
+  SystemHealth,
   UpdateCityRequest,
   UpdateKitchenRequest,
   UpdateVendorRequest,
@@ -193,6 +194,7 @@ export function createApiClient(options: ApiClientOptions) {
 
     // Operations
     opsOverview: () => get<OpsOverview>("/v1/ops/overview"),
+    systemHealth: () => get<SystemHealth>("/v1/ops/health"),
     opsShipments: (
       q: { status?: string; dispatchDate?: string; q?: string; exceptions?: boolean } = {},
     ) => get<OpsShipmentRow[]>("/v1/ops/shipments", q),

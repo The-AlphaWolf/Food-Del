@@ -1,6 +1,11 @@
 import type { Database } from "@food-del/db";
 import { DEFAULT_FEE_POLICY, type PlanningPolicy } from "@food-del/domain";
-import type { CarrierProvider, Notifier, PaymentProvider } from "@food-del/integrations";
+import type {
+  CarrierProvider,
+  ErrorReporter,
+  Notifier,
+  PaymentProvider,
+} from "@food-del/integrations";
 
 export interface Logger {
   info(msg: string, data?: Record<string, unknown>): void;
@@ -13,6 +18,21 @@ export const consoleLogger: Logger = {
   warn: (msg, data) => console.warn(JSON.stringify({ level: "warn", msg, ...data })),
   error: (msg, data) => console.error(JSON.stringify({ level: "error", msg, ...data })),
 };
+
+/**
+ * Log as usual and also send errors to the error reporter (Sentry), so a failing job or an
+ * unhandled API error pages someone instead of waiting to be noticed in the logs.
+ */
+export function reportingLogger(base: Logger, reporter: ErrorReporter): Logger {
+  return {
+    info: base.info,
+    warn: base.warn,
+    error(msg, data) {
+      base.error(msg, data);
+      void reporter.capture({ message: msg, level: "error", data });
+    },
+  };
+}
 
 export const silentLogger: Logger = { info: () => {}, warn: () => {}, error: () => {} };
 

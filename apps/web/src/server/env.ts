@@ -37,6 +37,8 @@ export interface ServerEnv {
   cronSecret: string | null;
   opsPhone: string | null;
   opsEmail: string | null;
+  /** Errors are also sent to Sentry when set. */
+  sentry: { dsn: string; environment: string; release?: string } | null;
 }
 
 function req(name: string): string {
@@ -127,6 +129,13 @@ export function serverEnv(): ServerEnv {
     cronSecret: process.env.CRON_SECRET ?? null,
     opsPhone: process.env.OPS_PHONE ?? null,
     opsEmail: process.env.OPS_EMAIL ?? null,
+    sentry: process.env.SENTRY_DSN
+      ? {
+          dsn: process.env.SENTRY_DSN,
+          environment: process.env.VERCEL_ENV ?? (isProduction ? "production" : "development"),
+          release: process.env.VERCEL_GIT_COMMIT_SHA,
+        }
+      : null,
   };
 
   if (isProduction && !allowDemo) {

@@ -4,6 +4,7 @@ export * from "./logistics/shiprocket";
 export * from "./logistics/types";
 export * from "./messaging/providers";
 export * from "./messaging/types";
+export * from "./monitoring/sentry";
 export * from "./payments/fake";
 export * from "./payments/razorpay";
 export * from "./payments/types";

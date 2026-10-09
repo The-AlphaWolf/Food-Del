@@ -1,6 +1,12 @@
 import "server-only";
 import { createApi } from "@food-del/api";
-import { type Core, consoleLogger, createCore, DEFAULT_CONFIG } from "@food-del/core";
+import {
+  type Core,
+  consoleLogger,
+  createCore,
+  DEFAULT_CONFIG,
+  reportingLogger,
+} from "@food-del/core";
 import { createDb } from "@food-del/db";
 import {
   type CarrierProvider,
@@ -13,6 +19,7 @@ import {
   RazorpayProvider,
   RecordingNotifier,
   ResendEmail,
+  SentryReporter,
   ShiprocketProvider,
   WhatsAppCloud,
 } from "@food-del/integrations";
@@ -70,7 +77,15 @@ function buildCore(): Core {
       opsPhone: env.opsPhone,
       opsEmail: env.opsEmail,
     },
-    logger: consoleLogger,
+    logger: env.sentry
+      ? reportingLogger(
+          consoleLogger,
+          new SentryReporter(env.sentry.dsn, {
+            environment: env.sentry.environment,
+            release: env.sentry.release,
+          }),
+        )
+      : consoleLogger,
   });
 }
 

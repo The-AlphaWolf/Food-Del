@@ -86,6 +86,14 @@ export class OutboxProcessor {
           attempts,
           error,
         });
+        if (attempts >= MAX_ATTEMPTS) {
+          this.deps.logger.error("outbox message parked after repeated failures", {
+            id: msg.id,
+            topic: msg.topic,
+            attempts,
+            error,
+          });
+        }
         await tx
           .update(outbox)
           .set({

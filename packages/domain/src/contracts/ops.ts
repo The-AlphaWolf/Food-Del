@@ -170,3 +170,59 @@ export const JobResultSchema = z
   .object({ job: JobNameSchema, processed: z.number().int(), detail: z.unknown().optional() })
   .meta({ id: "JobResult" });
 export type JobResult = z.infer<typeof JobResultSchema>;
+
+/**
+ * How often each job is scheduled (minutes); must match the cron entries in
+ * `apps/web/vercel.json` (a test checks). Health checks call a job late after
+ * `max(3 × cadence, cadence + 10)` minutes without a run.
+ */
+export const JOB_CADENCE_MINUTES: Record<JobName, number> = {
+  "process-outbox": 1,
+  "expire-holds": 5,
+  "lock-batches": 5,
+  "monitor-at-risk": 15,
+  "release-payouts": 60,
+  "materialize-slots": 1440,
+  housekeeping: 1440,
+};
+
+export const JOB_HEALTH = ["OK", "LATE", "FAILING", "NEVER_RUN"] as const;
+
+export const SystemHealthSchema = z
+  .object({
+    checkedAt: Instant,
+    status: z.enum(["OK", "DEGRADED"]),
+    database: z.object({ latencyMs: z.number() }),
+    jobs: z.array(
+      z.object({
+        job: JobNameSchema,
+        cadenceMinutes: z.number().int(),
+        health: z.enum(JOB_HEALTH),
+        lastRunAt: Instant.nullable(),
+        lastOkAt: Instant.nullable(),
+        lastError: z.string().nullable(),
+        lastProcessed: z.number().int().nullable(),
+        /** Average over the last 20 runs. */
+        avgDurationMs: z.number().nullable(),
+        failuresLast24h: z.number().int(),
+      }),
+    ),
+    outbox: z.object({
+      pending: z.number().int(),
+      /** Pending and already due: work waiting for the next run. */
+      due: z.number().int(),
+      oldestDueAgeSeconds: z.number().int().nullable(),
+      failed: z.number().int(),
+      failedByTopic: z.array(z.object({ topic: z.string(), count: z.number().int() })),
+    }),
+    signals: z.object({
+      lastPaymentCapturedAt: Instant.nullable(),
+      lastCarrierEventAt: Instant.nullable(),
+    }),
+  })
+  .meta({ id: "SystemHealth" });
+export type SystemHealth = z.infer<typeof SystemHealthSchema>;
+
+export const ReadinessSchema = z
+  .object({ ready: z.boolean() })
+  .meta({ id: "Readiness", description: "For uptime monitors: 503 when not ready" });
