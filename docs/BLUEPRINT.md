@@ -233,10 +233,11 @@ CANCELLED   FAILED(VENDOR_UNFULFILLED)                                          
 | M8 | Admin & ops: cities, lanes, blackouts, vendor onboarding, exceptions, claims, payouts | Launch a vendor and city with no deploy. |
 | M9 | Hardening & pilot: 10× festival load test, security, DPDP, monitoring, runbooks | Pilot on 2–3 lanes. |
 
-**Progress (October 2026):** M0–M8 are built and running against the fake payment and courier adapters, with 180+ unit, property and database tests. Playwright journeys run on phone and desktop:
+**Progress (October 2026):** M0–M8 are built and running against the fake payment and courier adapters, with 200+ unit, property and database tests. Playwright journeys run on phone and desktop:
 - **Shopper:** pincode → dated pre-order → pay.
 - **Kitchen and ops:** batch → pack → label → courier scans → delivered.
 - **Onboarding:** ops adds a kitchen, drafts its first delicacy (checking where it can reach fresh), puts it on sale and takes the kitchen live; routes are edited from the console.
+- **Payouts:** ops finds a delivered parcel's payout, holds it for review, resumes it and downloads a statement.
 
 Launching a kitchen, a delicacy, a route or a city is now a data change made in the ops console:
 - **Kitchens** start in onboarding and go live only when their checklist passes: a valid FSSAI licence, an owner who can sign in, something on sale, routes out of the city, and dispatch days. Owners are invited by mobile number and keep the invitation when they first sign in through Supabase.
@@ -244,9 +245,14 @@ Launching a kitchen, a delicacy, a route or a city is now a data change made in 
 - **Routes:** one courier service from a city to every pincode of another.
 - **Cities:** each new city claims its districts from the pincode directory.
 
-Still open in M8: a payouts screen for ops (kitchens already see their own).
+**Payouts:** the ops console shows:
+- what every kitchen is owed and what's stuck, and why (needs a payout account, held for review, waiting on a claim, transfer failed);
+- what was paid or clawed back;
+- a CSV statement for reconciling with Razorpay.
 
-Next up is M9, along with the business setup above. Razorpay and Shiprocket are switched on with environment variables (see `.env.example`).
+Payouts move only through provider transfers, and clawbacks reverse them ([ADR 0005](adr/0005-payouts-move-only-through-transfers.md)).
+
+With that, M8 is complete. Next up is M9, along with the business setup above. Razorpay and Shiprocket are switched on with environment variables (see `.env.example`).
 
 - **Phase 2:** Expo app reusing `domain`, `api-client` and `design-tokens`. Razorpay RN SDK, push notifications, deep links. Optional standalone `apps/api-server`.
 - **Phase 3:** Frozen/cooked meals, learned transit times, hampers and corporate gifting, origin hubs, direct courier contracts, Tier-2 rollout.

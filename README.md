@@ -48,6 +48,13 @@ Out of the box everything runs locally with no third-party accounts:
 - **Routes:** courier services between cities.
 - **Cities:** claim a new city's pincodes from the directory.
 
+**Payouts.** `/ops/payouts` shows:
+- what each kitchen is owed and what's stuck, and why;
+- what was paid or clawed back;
+- a CSV statement for reconciling with Razorpay.
+
+Kitchens are paid only through Razorpay Route transfers (see [ADR 0005](docs/adr/0005-payouts-move-only-through-transfers.md)).
+
 **Scheduled jobs.** In production, Vercel Cron runs them (see [ADR 0004](docs/adr/0004-scheduling-with-cron-and-outbox.md)): batch locking at cutoff, courier booking, notifications, at-risk alerts and payouts. Locally, run them in a second terminal with `pnpm --filter @food-del/web jobs:tick`.
 
 **API.** OpenAPI 3.1 at `/api/v1/openapi.json`, Swagger UI at `/api/v1/docs`.
