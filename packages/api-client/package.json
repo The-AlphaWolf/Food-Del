@@ -1,0 +1,30 @@
+{
+  "name": "@food-del/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Typed client for API v1 plus TanStack Query hooks. Shared by the web app and the Expo app.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./react": "./src/react.tsx"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@food-del/domain": "workspace:*"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5",
+    "react": "^19"
+  },
+  "devDependencies": {
+    "@food-del/config": "workspace:*",
+    "@tanstack/react-query": "catalog:",
+    "@types/react": "catalog:",
+    "react": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

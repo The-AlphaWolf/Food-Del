@@ -41,6 +41,7 @@ const OPEN: ShipmentStatus[] = [
 ];
 
 export interface ShipmentFilter {
+  id?: string;
   status?: ShipmentStatus;
   dispatchDate?: string;
   q?: string;
@@ -63,6 +64,7 @@ export class OpsService {
     const now = this.deps.clock();
     const originCity = aliasedTable(cities, "origin_city");
     const conditions = [];
+    if (filter.id) conditions.push(eq(shipments.id, filter.id));
     if (filter.status) conditions.push(eq(shipments.status, filter.status));
     if (filter.dispatchDate) conditions.push(eq(shipments.dispatchDate, filter.dispatchDate));
     if (filter.q?.trim()) {
@@ -230,9 +232,11 @@ export class OpsService {
         });
       }
     });
-    const [row] = await this.shipments(viewer, {}, 1000).then((rows) =>
-      rows.filter((r) => r.id === shipmentId),
-    );
+    return this.shipment(viewer, shipmentId);
+  }
+
+  async shipment(viewer: Viewer | null, id: string): Promise<OpsShipmentRow> {
+    const [row] = await this.shipments(viewer, { id }, 1);
     if (!row) throw notFound("Parcel");
     return row;
   }
