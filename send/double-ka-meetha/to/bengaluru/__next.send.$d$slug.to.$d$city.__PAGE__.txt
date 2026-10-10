@@ -1,0 +1,67 @@
+1:"$Sreact.fragment"
+2:"/Food-Del/_next/static/chunks/0wl076ke83vxi.js"
+3:"/Food-Del/_next/static/chunks/08gg12vjxtusb.js"
+4:"/Food-Del/_next/static/chunks/02jvcq3fe75z_.js"
+5:"/Food-Del/_next/static/chunks/2_2_9-z36ivl8.js"
+6:I[87329,["$2","$3","$4","$5"],"Providers"]
+7:I[13670,["$2","$3","$4","$5"],"DemoGate"]
+8:I[84442,["$2","$3","$4","$5"],"SiteHeader"]
+9:I[61721,["$2","$3","$4","$5"],"default"]
+a:"/Food-Del/_next/static/chunks/0o3fvss15vlut.js"
+b:I[71653,["$2","$3","$4","$5","$a"],"default"]
+c:I[89900,["$2","$3","$4","$5"],"default"]
+d:"/Food-Del/_next/static/chunks/1tpfpxc57pgkf.js"
+e:"/Food-Del/_next/static/chunks/3ys-827vtself.js"
+f:"/Food-Del/_next/static/chunks/0xc19w1tbft0y.js"
+10:"/Food-Del/_next/static/chunks/3aghjvnx9lvzc.js"
+11:I[5302,["$2","$3","$4","$5","$d","$e","$f","$10"],"DemoFallback"]
+12:"/Food-Del/_next/static/chunks/2jcx1hh8vok8n.js"
+13:I[48612,["$2","$3","$4","$5","$12","$d"],""]
+14:I[81036,["$2","$3","$4","$5"],"ThemeSwitcher"]
+15:I[78557,["$2","$3","$4","$5"],"MobileTabBar"]
+22:I[89393,["$2","$3","$4","$5","$12","$d"],"SendDemo"]
+27:"ViewportBoundary"
+28:I[14712,["$2","$3","$4","$5"],"$27"]
+29:"MetadataBoundary"
+2a:I[14712,["$2","$3","$4","$5"],"$29"]
+2b:"$Sreact.suspense"
+:HL["/Food-Del/_next/static/chunks/2282cioi5zi4f.css","style"]
+17:X
+1a:X
+1a:C
+21:[["children",{"s":"__PAGE__","h":160,"d":{"r":["$","$1","c",{"children":[["$","$L22",null,{"slug":"double-ka-meetha","city":"bengaluru"}],["$L23","$L24"],"$L25"]}],"p":"$@26","v":null,"s":"$17"}}]]
+1f:[["children",{"s":{"n":"city","t":"d","k":"bengaluru","s":[]},"h":96,"d":{"r":["$","$1","c",{"children":[null,["$","$L9",null,{"parallelRouterKey":"children","template":["$","$Lc",null,{}]}]]}],"p":"$@20","v":"$1a","s":"$17"},"c":"$Q21"}]]
+1d:[["children",{"s":"to","h":96,"d":{"r":["$","$1","c",{"children":[null,["$","$L9",null,{"parallelRouterKey":"children","template":["$","$Lc",null,{}]}]]}],"p":"$@1e","v":"$1a","s":"$17"},"c":"$Q1f"}]]
+1b:[["children",{"s":{"n":"slug","t":"d","k":"double-ka-meetha","s":[]},"h":96,"d":{"r":["$","$1","c",{"children":[null,["$","$L9",null,{"parallelRouterKey":"children","template":["$","$Lc",null,{}]}]]}],"p":"$@1c","v":"$1a","s":"$17"},"c":"$Q1d"}]]
+18:[["children",{"s":"send","h":96,"d":{"r":["$","$1","c",{"children":[null,["$","$L9",null,{"parallelRouterKey":"children","template":["$","$Lc",null,{}]}]]}],"p":"$@19","v":"$1a","s":"$17"},"c":"$Q1b"}]]
+0:{"t":{"t":{"s":"","h":80,"d":{"r":["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/Food-Del/_next/static/chunks/2282cioi5zi4f.css","precedence":"next"}],["$","script","script-0",{"src":"/Food-Del/_next/static/chunks/0wl076ke83vxi.js","async":true}],["$","script","script-1",{"src":"/Food-Del/_next/static/chunks/08gg12vjxtusb.js","async":true}],["$","script","script-2",{"src":"/Food-Del/_next/static/chunks/02jvcq3fe75z_.js","async":true}],["$","script","script-3",{"src":"/Food-Del/_next/static/chunks/2_2_9-z36ivl8.js","async":true}]],["$","html",null,{"lang":"en-IN","suppressHydrationWarning":true,"children":[["$","head",null,{"children":["$","script",null,{"dangerouslySetInnerHTML":{"__html":"(function(){try{var p=localStorage.getItem(\"fd-theme\");var d=p===\"dark\"||(p!==\"light\"&&matchMedia(\"(prefers-color-scheme: dark)\").matches);document.documentElement.dataset.theme=d?\"dark\":\"light\"}catch(e){}})()"}}]}],["$","body",null,{"className":"flex min-h-dvh flex-col antialiased","children":["$","$L6",null,{"children":["$","$L7",null,{"children":[["$","$L8",null,{}],["$","main",null,{"id":"main","className":"flex-1","children":["$","$L9",null,{"parallelRouterKey":"children","error":"$b","errorStyles":[],"errorScripts":[["$","script","script-0",{"src":"/Food-Del/_next/static/chunks/0o3fvss15vlut.js","async":true}]],"template":["$","$Lc",null,{}],"notFound":[["$","$L11",null,{}],[]]}]}],["$","footer",null,{"className":"mt-20 border-t border-line bg-paper-deep","children":[["$","div",null,{"className":"container-page grid gap-8 py-12 md:grid-cols-4","children":[["$","div",null,{"className":"md:col-span-2","children":[["$","p",null,{"className":"font-display text-2xl font-extrabold text-jaggery","children":"Food-Del"}],["$","p",null,{"className":"mt-2 max-w-sm text-sm text-ink-soft","children":"Iconic sweets and specialities, made to order in their home city and shipped in cold-chain packaging to arrive fresh — on the day you choose."}]]}],["$","div",null,{"children":[["$","h2",null,{"className":"mb-3 font-sans text-sm font-bold uppercase tracking-wider text-ink","children":"Shop"}],["$","ul",null,{"className":"space-y-2 text-sm text-ink-soft","children":[["$","li",null,{"children":["$","$L13",null,{"href":"/from/kolkata","className":"hover:text-jaggery","children":"From Kolkata"}]}],["$","li",null,{"children":["$","$L13",null,{"href":"/from/hyderabad","className":"hover:text-jaggery","children":"From Hyderabad"}]}],["$","li",null,{"children":["$","$L13",null,{"href":"/from/delhi-ncr","className":"hover:text-jaggery","children":"From Delhi NCR"}]}],["$","li",null,{"children":["$","$L13",null,{"href":"/from/bengaluru","className":"hover:text-jaggery","children":"From Bengaluru"}]}]]}]]}],["$","div",null,{"children":[["$","h2",null,{"className":"mb-3 font-sans text-sm font-bold uppercase tracking-wider text-ink","children":"Help"}],["$","ul",null,{"className":"space-y-2 text-sm text-ink-soft","children":[["$","li",null,{"children":["$","$L13",null,{"href":"/how-it-works","className":"hover:text-jaggery","children":"How fresh delivery works"}]}],["$","li",null,{"children":["$","$L13",null,{"href":"/orders","className":"hover:text-jaggery","children":"Track an order"}]}],["$","li",null,{"children":["$","$L13",null,{"href":"/vendor","className":"hover:text-jaggery","children":"For kitchens"}]}],["$","li",null,{"children":["$","$L13",null,{"href":"/privacy","className":"hover:text-jaggery","children":"Privacy notice"}]}]]}]]}]]}],["$","div",null,{"className":"border-t border-line","children":["$","div",null,{"className":"container-page flex flex-col-reverse gap-4 py-5 md:flex-row md:items-end md:justify-between","children":[["$","p",null,{"className":"max-w-xl text-xs text-ink-muted","children":"All food sold is prepared by FSSAI-licensed kitchens; each product page lists the licence number. Prices include GST."}],["$","$L14",null,{}]]}]}]]}],["$","$L15",null,{}]]}]}]}]]}]]}],"p":"$@16","v":null,"s":"$17"},"c":"$Q18"},"h":{"r":["$","$1","h",{"children":[null,["$","$L28",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1, viewport-fit=cover"}],["$","meta","2",{"name":"theme-color","content":"#FFF9F0","media":"(prefers-color-scheme: light)"}],["$","meta","3",{"name":"theme-color","content":"#16100B","media":"(prefers-color-scheme: dark)"}]]}],["$","$L2a",null,{"children":[["$","div",null,{"hidden":true,"children":["$","$2b",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"Send Double ka Meetha to Bengaluru · Food-Del"}],"$L2c","$L2d","$L2e","$L2f","$L30","$L31","$L32","$L33","$L34","$L35","$L36","$L37","$L38"]}]}],null]}],null]}],"p":"$@39","v":null,"s":"$17"}},"a":"$@3a","u":"$@3b","b":"FqAhc6eOBqpXO4W12xF2u"}
+3c:I[14712,["$2","$3","$4","$5"],"OutletBoundary"]
+3e:I[77923,["$2","$3","$4","$5"],"IconMark"]
+23:["$","script","script-0",{"src":"/Food-Del/_next/static/chunks/2jcx1hh8vok8n.js","async":true}]
+24:["$","script","script-1",{"src":"/Food-Del/_next/static/chunks/1tpfpxc57pgkf.js","async":true}]
+25:["$","$L3c",null,{"children":["$","$2b",null,{"name":"Next.MetadataOutlet","children":"$@3d"}]}]
+2c:["$","meta","1",{"name":"description","content":"Order Kolkata's sandesh, Hyderabad's Osmania biscuits, Old Delhi's sohan halwa and Mysore pak — made to order and delivered fresh across India on the day you choose."}]
+2d:["$","meta","2",{"name":"application-name","content":"Food-Del"}]
+2e:["$","meta","3",{"name":"format-detection","content":"telephone=no"}]
+2f:["$","meta","4",{"property":"og:title","content":"Send Double ka Meetha to Bengaluru · Food-Del"}]
+30:["$","meta","5",{"property":"og:description","content":"Order Kolkata's sandesh, Hyderabad's Osmania biscuits, Old Delhi's sohan halwa and Mysore pak — made to order and delivered fresh across India on the day you choose."}]
+31:["$","meta","6",{"property":"og:site_name","content":"Food-Del"}]
+32:["$","meta","7",{"property":"og:locale","content":"en_IN"}]
+33:["$","meta","8",{"property":"og:type","content":"website"}]
+34:["$","meta","9",{"name":"twitter:card","content":"summary"}]
+35:["$","meta","10",{"name":"twitter:title","content":"Send Double ka Meetha to Bengaluru · Food-Del"}]
+36:["$","meta","11",{"name":"twitter:description","content":"Order Kolkata's sandesh, Hyderabad's Osmania biscuits, Old Delhi's sohan halwa and Mysore pak — made to order and delivered fresh across India on the day you choose."}]
+37:["$","link","12",{"rel":"icon","href":"/Food-Del/icon.svg?icon.1bd2xyzbgxrlz.svg","sizes":"any","type":"image/svg+xml"}]
+38:["$","$L3e","13",{}]
+17:300
+3d:null
+3b:true
+17:C
+3a:0
+20:"$undefined"
+1e:"$undefined"
+1c:"$undefined"
+19:"$undefined"
+16:"$undefined"
+39:"$undefined"
+26:"$undefined"
