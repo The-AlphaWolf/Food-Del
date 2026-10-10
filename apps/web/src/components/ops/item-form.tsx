@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ART_LABELS,
   type DIETS,
   formatShelfLife,
   minResidualFloorHours,
@@ -504,7 +505,7 @@ export function ItemForm({ kitchenId, item }: { kitchenId: string; item?: ItemAd
                 <option value="">Plain</option>
                 {options.data?.artKeys.map((a) => (
                   <option key={a} value={a}>
-                    {a}
+                    {ART_LABELS[a]}
                   </option>
                 ))}
               </Select>

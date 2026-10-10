@@ -120,7 +120,7 @@ function Inventory() {
                             setEdits({ ...edits, [key]: Math.max(0, Number(e.target.value)) })
                           }
                           className={cn(
-                            "h-9 w-14 rounded border border-line-strong bg-card text-center",
+                            "h-9 w-14 rounded border border-field bg-card text-center",
                             edits[key] !== undefined && "border-jaggery bg-saffron-soft",
                           )}
                         />

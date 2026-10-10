@@ -114,7 +114,7 @@ export function AddToCart({
                 "flex min-h-14 items-center justify-between gap-3 rounded-md border px-4 py-3 transition-colors",
                 v.id === variantId
                   ? "border-jaggery bg-saffron-soft/50"
-                  : "border-line-strong bg-card hover:border-jaggery",
+                  : "border-field bg-card hover:border-jaggery",
               )}
             >
               <span className="flex items-center gap-3">
@@ -139,7 +139,7 @@ export function AddToCart({
           Quantity
         </span>
         <div
-          className="flex items-center rounded-md border border-line-strong bg-card"
+          className="flex items-center rounded-md border border-field bg-card"
           role="group"
           aria-labelledby="qty-label"
         >

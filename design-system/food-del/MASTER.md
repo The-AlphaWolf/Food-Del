@@ -17,6 +17,15 @@ We deliberately avoid the orange-and-blue "food delivery app" look and glassy bl
 - *Its `--design-system` output again proposed off-brand styles (green/orange e-commerce, Amatic SC craft), so the brand system above stands.*
 - *Its UX guidelines (focusable error summary, step progress, mobile tables, empty states, Focus Not Obscured, bottom navigation of five or fewer tabs) drove the navigation, list and form rules below.*
 
+*Revisited again on 10 October 2026 for themes:*
+- *The skill's `--design-system` output was off-brand a third time (green e-commerce, Rubik/Nunito) and was rejected.*
+- *Its dark-mode rules were adopted:*
+  - *design light and dark together;*
+  - *use tonal, desaturated variants, not inversion;*
+  - *test contrast separately in each theme;*
+  - *keep borders visible in both;*
+  - *measure the modal scrim against the real background.*
+
 ## Colour (semantic, WCAG AA verified in `tokens.test.ts`)
 | Token | Hex | Use |
 |---|---|---|
@@ -28,7 +37,30 @@ We deliberately avoid the orange-and-blue "food delivery app" look and glassy bl
 | `veg` / `non-veg` / `egg` | #1B7A3A / #8B2A1A / #B7791F | FSSAI diet marks (always with label) |
 | `success` / `warning` / `danger` / `info` | AA pairs with `*-soft` backgrounds | Status |
 
+| `field` | #A08770 | Borders that identify a form control (inputs, steppers, choice cards): 3:1 against the surface (WCAG 1.4.11). `line` / `line-strong` are for dividers and decoration only. |
+| `art-*` | per temperature | Backdrops behind the illustrated delicacies |
+
 Rule: colour never carries meaning alone. Diet marks, temperature and status always pair an icon with text.
+
+## Themes: Light and Night
+- **Night is the same shop after dark, not an inversion.**
+  - Surfaces are warm near-black, never pure black: `paper` #16100B, `card` #251C15.
+  - Text is cream: `ink` #F7ECDF.
+  - Brand and status colours use lighter tonal versions: `jaggery` #E9A46B, `chilled` #6FCBDA, `success` #6BD394.
+  - The primary button keeps its role, but its text turns dark (`on-jaggery` #1B0F07).
+- **Same variable names in both themes.** Components use semantic classes only (`bg-card`, `text-ink`, `text-on-jaggery`) and never `text-white` or raw hex.
+- **Tested in both themes.** `tokens.test.ts` checks every text pair the UI uses (26 pairs, at least 4.5:1) and the UI pairs (focus ring, egg mark and field border, at least 3:1) in each theme. A new token must be defined in both.
+- **Choosing a theme:**
+  - The device setting decides by default.
+  - The header button switches light ↔ dark in one tap.
+  - Footer → Appearance offers System / Light / Dark, including going back to following the device.
+  - The choice is saved per browser.
+- **No flash.** A tiny script in `<head>` sets `data-theme` on `<html>` before first paint. Without JavaScript, `prefers-color-scheme` still applies. Colour transitions are suppressed for the frame of a switch.
+- **Details:**
+  - `color-scheme` is set per theme, so native controls, scrollbars and date pickers follow.
+  - The `theme-color` meta follows the theme.
+  - Night's dialog scrim is stronger (65% black), because 45% brown didn't separate a dialog from a dark page.
+  - Use the `dark:` variant only for things tokens can't express, such as swapping the sun/moon icon.
 
 ## Typography
 - **Display:** Playfair Display (variable), weights 600–800, for page and section titles only.
@@ -40,7 +72,11 @@ Rule: colour never carries meaning alone. Diet marks, temperature and status alw
 - Mobile-first breakpoints: 375 → 768 → 1024 → 1280. Content max width 1200px. No horizontal scroll.
 - Touch targets ≥ 44×44px with 8px spacing. Bottom-anchored primary action on mobile checkout.
 - **Cards:** white on paper, 1px `line` border, `rounded-lg`, `shadow-card` on hover only.
-- **Product imagery:** illustrated SVG motifs per delicacy (`ItemArt`) until photography lands. No stock photos, no emoji.
+- **Product imagery:** illustrated SVG motifs (`ItemArt`) until photography lands. No stock photos, no emoji.
+  - **One motif per delicacy:** 30 motifs, named for ops in `ART_LABELS`. No two seeded delicacies share artwork; a catalogue page of identical laddoos told shoppers nothing.
+  - **Backdrop and accent lines follow the theme** (`art-*` tokens, `currentColor`) so the art doesn't glare in Night. The food keeps its real colours in both themes, as a photograph would.
+- **Card eyebrow depends on context:** "From {city}" when browsing; the kitchen's name on a city page; the category on a kitchen page. Never repeat what the page already says.
+- **City pages:** a hero with facts (delicacies, kitchens, oldest kitchen) and a mosaic of the city's art. Category headings show their count.
 - **Icons:** Lucide (stroke 1.75). Icon-only buttons always have an `aria-label`.
 
 ## Navigation

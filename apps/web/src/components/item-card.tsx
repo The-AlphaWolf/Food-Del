@@ -8,7 +8,27 @@ import { ItemArt } from "./item-art";
  * A delicacy in a list. Phones get a compact row (thumbnail beside the details) so a city's
  * catalogue scans quickly; wider screens get the full card.
  */
-export function ItemCard({ item, priority = false }: { item: ItemCardData; priority?: boolean }) {
+/**
+ * Where the card is shown changes what's worth saying: on a city's page every card is from that
+ * city, so the eyebrow names the kitchen; on a kitchen's page, the kind of delicacy.
+ */
+export type CardContext = "browse" | "city" | "kitchen";
+
+export function ItemCard({
+  item,
+  priority = false,
+  context = "browse",
+}: {
+  item: ItemCardData;
+  priority?: boolean;
+  context?: CardContext;
+}) {
+  const eyebrow =
+    context === "city"
+      ? item.vendor.name
+      : context === "kitchen"
+        ? item.category.name
+        : `From ${item.vendor.city.name}`;
   return (
     <article className="group relative flex h-full overflow-hidden rounded-lg border border-line bg-card transition-shadow duration-200 hover:shadow-card focus-within:shadow-card sm:flex-col">
       <div
@@ -24,7 +44,7 @@ export function ItemCard({ item, priority = false }: { item: ItemCardData; prior
       <div className="flex min-w-0 flex-1 flex-col gap-1.5 p-3 sm:gap-2 sm:p-4">
         <div className="flex items-center justify-between gap-2">
           <p className="truncate text-[11px] font-bold uppercase tracking-[0.12em] text-jaggery sm:text-xs">
-            From {item.vendor.city.name}
+            {eyebrow}
           </p>
           <DietMark diet={item.diet} />
         </div>
@@ -37,7 +57,9 @@ export function ItemCard({ item, priority = false }: { item: ItemCardData; prior
           </Link>
         </h3>
         <p className="line-clamp-2 text-sm text-ink-soft">{item.shortDescription}</p>
-        <p className="hidden text-xs text-ink-muted sm:block">{item.vendor.name}</p>
+        {context === "browse" && (
+          <p className="hidden text-xs text-ink-muted sm:block">{item.vendor.name}</p>
+        )}
         <div className="flex flex-wrap items-center gap-2 sm:mt-auto sm:pt-2">
           <FreshnessBadge tempClass={item.tempClass} shelfLifeHours={item.shelfLifeHours} />
         </div>
@@ -53,12 +75,12 @@ export function ItemCard({ item, priority = false }: { item: ItemCardData; prior
   );
 }
 
-export function ItemGrid({ items }: { items: ItemCardData[] }) {
+export function ItemGrid({ items, context }: { items: ItemCardData[]; context?: CardContext }) {
   return (
     <ul className="grid gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
       {items.map((item, i) => (
         <li key={item.id}>
-          <ItemCard item={item} priority={i < 4} />
+          <ItemCard item={item} priority={i < 4} context={context} />
         </li>
       ))}
     </ul>

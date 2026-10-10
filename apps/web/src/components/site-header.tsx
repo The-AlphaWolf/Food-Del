@@ -8,6 +8,7 @@ import { cn } from "@/lib/cn";
 import { useSession } from "@/lib/session";
 import { showsTabBar } from "./mobile-tab-bar";
 import { PincodeButton } from "./pincode-picker";
+import { ThemeButton } from "./theme-toggle";
 
 export function SiteHeader() {
   const count = useCartCount();
@@ -51,6 +52,7 @@ export function SiteHeader() {
             </Link>
           )}
         </nav>
+        <ThemeButton />
         <PincodeButton />
         <Link
           href={user ? "/account" : "/login"}
@@ -72,7 +74,7 @@ export function SiteHeader() {
         >
           <ShoppingBag className="size-5" />
           {count > 0 && (
-            <span className="tabular absolute right-1 top-1 flex min-w-5 items-center justify-center rounded-pill bg-jaggery px-1 text-[11px] font-bold text-white">
+            <span className="tabular absolute right-1 top-1 flex min-w-5 items-center justify-center rounded-pill bg-jaggery px-1 text-[11px] font-bold text-on-jaggery">
               {count}
             </span>
           )}

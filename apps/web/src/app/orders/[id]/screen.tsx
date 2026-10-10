@@ -65,7 +65,7 @@ function Timeline({ s }: { s: ShipmentDetail }) {
               className={cn(
                 "flex size-8 items-center justify-center rounded-pill border-2 text-xs font-bold",
                 done
-                  ? "border-jaggery bg-jaggery text-white"
+                  ? "border-jaggery bg-jaggery text-on-jaggery"
                   : "border-line-strong bg-card text-ink-muted",
                 current && "ring-4 ring-saffron-soft",
               )}

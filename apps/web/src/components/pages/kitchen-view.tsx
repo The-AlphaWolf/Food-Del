@@ -18,7 +18,7 @@ export function KitchenView({ v, pincode }: { v: VendorDetail; pincode?: string 
       </section>
       <div className="container-page py-10">
         <PincodePrompt initial={pincode ?? null} />
-        <ItemGrid items={v.items} />
+        <ItemGrid items={v.items} context="kitchen" />
       </div>
     </>
   );

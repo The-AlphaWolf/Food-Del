@@ -43,6 +43,13 @@
       "when": 1791565732025,
       "tag": "0005_privacy",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791615519352,
+      "tag": "0006_item_art",
+      "breakpoints": true
     }
   ]
 }

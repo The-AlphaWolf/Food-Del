@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ThemeSwitcher } from "./theme-toggle";
 
 export function SiteFooter() {
   return (
@@ -67,10 +68,13 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-line">
-        <p className="container-page py-4 text-xs text-ink-muted">
-          All food sold is prepared by FSSAI-licensed kitchens; each product page lists the licence
-          number. Prices include GST.
-        </p>
+        <div className="container-page flex flex-col-reverse gap-4 py-5 md:flex-row md:items-end md:justify-between">
+          <p className="max-w-xl text-xs text-ink-muted">
+            All food sold is prepared by FSSAI-licensed kitchens; each product page lists the
+            licence number. Prices include GST.
+          </p>
+          <ThemeSwitcher />
+        </div>
       </div>
     </footer>
   );

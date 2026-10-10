@@ -132,7 +132,7 @@ export function Stepper({
                     here
                       ? "bg-jaggery text-on-jaggery"
                       : done
-                        ? "bg-success text-white"
+                        ? "bg-success text-card"
                         : "bg-paper-deep text-ink-muted",
                   )}
                 >

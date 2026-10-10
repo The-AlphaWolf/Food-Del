@@ -50,7 +50,7 @@ export function MobileTabBar() {
       <div aria-hidden className="h-[calc(4rem+env(safe-area-inset-bottom))] md:hidden" />
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-card pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgb(42_22_9/0.06)] md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-card pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgb(0_0_0/0.08)] md:hidden"
       >
         <ul className="mx-auto grid h-16 max-w-lg grid-cols-5">
           {tabs.map((t) => {
@@ -81,7 +81,7 @@ export function MobileTabBar() {
                       aria-hidden
                     />
                     {isCart && count > 0 && (
-                      <span className="tabular absolute -right-2.5 -top-1.5 flex min-w-[18px] items-center justify-center rounded-pill bg-jaggery px-1 text-[10px] font-bold leading-[18px] text-white">
+                      <span className="tabular absolute -right-2.5 -top-1.5 flex min-w-[18px] items-center justify-center rounded-pill bg-jaggery px-1 text-[10px] font-bold leading-[18px] text-on-jaggery">
                         {count}
                       </span>
                     )}

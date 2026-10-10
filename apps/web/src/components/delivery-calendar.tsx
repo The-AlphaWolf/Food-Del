@@ -60,7 +60,7 @@ export function DeliveryCalendar({
                 available &&
                   !isSelected &&
                   "border-line-strong bg-card text-ink hover:border-jaggery hover:text-jaggery",
-                isSelected && "border-jaggery bg-jaggery text-white",
+                isSelected && "border-jaggery bg-jaggery text-on-jaggery",
                 !available &&
                   "cursor-not-allowed border-transparent bg-paper-deep/70 text-ink-muted/70 line-through decoration-1",
               )}

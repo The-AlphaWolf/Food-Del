@@ -64,12 +64,12 @@ export function SearchView({
             name="q"
             defaultValue={sp.q}
             placeholder="Sandesh, halwa, Hyderabad…"
-            className="h-11 w-full rounded-md border border-line-strong bg-card pl-9 pr-3 text-[15px] focus:border-jaggery focus:outline-none"
+            className="h-11 w-full rounded-md border border-field bg-card pl-9 pr-3 text-[15px] focus:border-jaggery focus:outline-none"
           />
         </div>
         <button
           type="submit"
-          className="h-11 rounded-md bg-jaggery px-4 font-semibold text-white hover:bg-jaggery-deep"
+          className="h-11 rounded-md bg-jaggery px-4 font-semibold text-on-jaggery hover:bg-jaggery-deep"
         >
           Search
         </button>
@@ -87,7 +87,7 @@ export function SearchView({
                 className={cn(
                   "inline-flex min-h-10 items-center rounded-pill border px-4 text-sm font-semibold",
                   sp.origin === c.slug
-                    ? "border-jaggery bg-jaggery text-white"
+                    ? "border-jaggery bg-jaggery text-on-jaggery"
                     : "border-line-strong bg-card hover:border-jaggery",
                 )}
               >
@@ -106,7 +106,7 @@ export function SearchView({
               className={cn(
                 "rounded-pill border px-3.5 py-1.5 text-sm font-semibold",
                 sp.category === c.slug
-                  ? "border-jaggery bg-jaggery text-white"
+                  ? "border-jaggery bg-jaggery text-on-jaggery"
                   : "border-line-strong bg-card hover:border-jaggery",
               )}
             >
@@ -124,8 +124,8 @@ export function SearchView({
               className={cn(
                 "flex size-5 items-center justify-center rounded border",
                 sp.available === "1"
-                  ? "border-jaggery bg-jaggery text-white"
-                  : "border-line-strong bg-card",
+                  ? "border-jaggery bg-jaggery text-on-jaggery"
+                  : "border-field bg-card",
               )}
             >
               {sp.available === "1" && <Check className="size-3.5" aria-hidden />}

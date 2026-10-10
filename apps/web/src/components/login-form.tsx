@@ -74,7 +74,7 @@ export function LoginForm({
           hint="We'll send a 6-digit code by SMS."
         >
           <div className="flex">
-            <span className="flex h-11 items-center rounded-l-md border border-r-0 border-line-strong bg-paper-deep px-3 text-sm font-semibold text-ink-soft">
+            <span className="flex h-11 items-center rounded-l-md border border-r-0 border-field bg-paper-deep px-3 text-sm font-semibold text-ink-soft">
               +91
             </span>
             <Input

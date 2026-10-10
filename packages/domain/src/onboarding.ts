@@ -30,21 +30,41 @@ export const IATA_RE = /^[A-Z]{3}$/;
 /** GST slabs that apply to packaged food, in basis points. */
 export const GST_RATES_BPS = [0, 500, 1200, 1800] as const;
 
-/** Illustrated motifs available until photography lands. */
-export const ART_KEYS = [
-  "sandesh",
-  "rosogolla",
-  "laddoo",
-  "barfi",
-  "halwa",
-  "biscuit",
-  "namkeen",
-  "pickle",
-  "peda",
-  "pak",
-  "jar",
-] as const;
-export type ArtKey = (typeof ART_KEYS)[number];
+/** Illustrated motifs available until photography lands, with the name ops sees. */
+export const ART_LABELS = {
+  sandesh: "Sandesh (moulded)",
+  rosogolla: "Rosogolla in syrup",
+  "baked-rosogolla": "Baked rosogolla",
+  "kacha-golla": "Kacha golla",
+  tin: "Tinned sweets",
+  laddoo: "Laddoo",
+  moa: "Moa (puffed rice)",
+  naru: "Coconut naru",
+  barfi: "Barfi with silver leaf",
+  dodha: "Dodha barfi",
+  jaali: "Lattice (badam ki jaali)",
+  halwa: "Halwa slab",
+  sohan: "Sohan halwa discs",
+  "meetha-dish": "Pudding in a dish",
+  peda: "Peda",
+  pak: "Mysore pak",
+  chiroti: "Chiroti (layered)",
+  obbattu: "Obbattu (flatbread)",
+  biscuit: "Biscuits",
+  "fruit-biscuit": "Fruit biscuits",
+  mathri: "Mathri",
+  namkeen: "Namkeen mix",
+  nimki: "Nimki",
+  "dal-moth": "Dal moth",
+  murukku: "Murukku",
+  peanuts: "Spiced peanuts",
+  nippattu: "Nippattu",
+  pickle: "Pickle (red)",
+  gongura: "Pickle (green)",
+  jar: "Preserve in a jar",
+} as const;
+export const ART_KEYS = Object.keys(ART_LABELS) as [ArtKey, ...ArtKey[]];
+export type ArtKey = keyof typeof ART_LABELS;
 
 /** Licences must stay valid this long after go-live, so renewals never interrupt dispatch. */
 export const FSSAI_MIN_VALIDITY_DAYS = 30;

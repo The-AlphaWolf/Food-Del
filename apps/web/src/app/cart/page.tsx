@@ -115,7 +115,7 @@ export default function CartPage() {
                                 </p>
                               )}
                               <div className="mt-1 flex items-center gap-2">
-                                <div className="flex items-center rounded-md border border-line-strong">
+                                <div className="flex items-center rounded-md border border-field">
                                   <button
                                     type="button"
                                     className="flex size-9 items-center justify-center"

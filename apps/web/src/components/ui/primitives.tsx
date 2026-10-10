@@ -165,7 +165,7 @@ export function Field({
 }
 
 export const inputClasses =
-  "h-11 w-full rounded-md border border-line-strong bg-card px-3 text-[15px] text-ink placeholder:text-ink-muted " +
+  "h-11 w-full rounded-md border border-field bg-card px-3 text-[15px] text-ink placeholder:text-ink-muted " +
   "transition-colors focus:border-jaggery focus:outline-none focus-visible:outline-2 focus-visible:outline-focus " +
   "aria-[invalid=true]:border-danger";
 
