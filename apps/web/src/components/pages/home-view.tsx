@@ -1,8 +1,8 @@
 import type { Category, City, ItemCard } from "@food-del/domain/contracts";
 import { BadgeCheck, ShieldCheck, Snowflake } from "lucide-react";
 import Link from "next/link";
-import { BengaluruNeighborhoodPicker } from "@/components/bengaluru-neighborhood-picker";
 import { TrendingInBengaluru, WeekendFeastBanner } from "@/components/bengaluru-social-proof";
+import { HeroPincode } from "@/components/hero-pincode";
 import { HometownHubs } from "@/components/hometown-hubs";
 import { HowItWorks } from "@/components/how-it-works";
 import { ItemArt } from "@/components/item-art";
@@ -31,7 +31,7 @@ export function HomeView({
   pincode,
 }: HomeData & { pincode?: string }) {
   const _origins = cities.filter((c) => c.isOrigin && c.launchStatus === "LIVE");
-  const _destinations = cities
+  const destinations = cities
     .filter((c) => c.isDestination && c.launchStatus === "LIVE")
     .map((c) => c.name)
     .sort();
@@ -45,7 +45,7 @@ export function HomeView({
               <span>Bengaluru Tech Transplants · Taste of Home</span>
             </div>
             <h1 className="text-4xl font-extrabold leading-[1.08] text-ink md:text-5xl lg:text-6xl">
-              The taste of your hometown, delivered fresh to Bengaluru.
+              The taste of another city, delivered fresh to Bengaluru.
             </h1>
             <p className="mt-5 max-w-xl text-lg text-ink-soft">
               Iconic sweets and regional delicacies from the kitchens that made them famous in
@@ -53,7 +53,7 @@ export function HomeView({
               direct to your doorstep.
             </p>
             <div className="mt-7 max-w-lg">
-              <BengaluruNeighborhoodPicker initialPincode={pincode ?? null} />
+              <HeroPincode initial={pincode ?? null} destinations={destinations} />
             </div>
           </div>
 
