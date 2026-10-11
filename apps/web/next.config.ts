@@ -16,7 +16,7 @@ const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline' https://checkout.razorpay.com${process.env.NODE_ENV === "production" ? "" : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://*.razorpay.com",
+  "img-src 'self' data: blob: https://*.razorpay.com https://images.unsplash.com",
   "font-src 'self' data:",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.razorpay.com https://lumberjack.razorpay.com",
   "frame-src https://api.razorpay.com https://checkout.razorpay.com",
@@ -35,12 +35,20 @@ const staticDemo = process.env.NEXT_PUBLIC_STATIC_DEMO === "1";
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || undefined;
 
 const config: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+    ],
+    ...(staticDemo ? { unoptimized: true } : {}),
+  },
   ...(staticDemo
     ? {
         output: "export" as const,
         basePath,
         trailingSlash: true,
-        images: { unoptimized: true },
         pageExtensions: ["tsx"],
       }
     : {}),

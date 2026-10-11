@@ -1,5 +1,7 @@
+"use client";
+
 import type { ArtKey, TempClass } from "@food-del/domain";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { cn } from "@/lib/cn";
 
 /**
@@ -804,19 +806,117 @@ const BACKDROP: Record<TempClass, { a: string; b: string; accent: string }> = {
   FROZEN: { a: "var(--color-art-frozen-a)", b: "var(--color-art-frozen-b)", accent: "text-info" },
 };
 
+/** Curated photography for authentic regional delicacies */
+export const FOOD_PHOTOS: Record<string, string> = {
+  sandesh:
+    "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=800&q=80",
+  "baked-rosogolla":
+    "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=800&q=80",
+  tin: "https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?auto=format&fit=crop&w=800&q=80",
+  "kacha-golla":
+    "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=800&q=80",
+  moa: "https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?auto=format&fit=crop&w=800&q=80",
+  namkeen:
+    "https://images.unsplash.com/photo-1606491956689-2ea866880c84?auto=format&fit=crop&w=800&q=80",
+  nimki:
+    "https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&w=800&q=80",
+  naru: "https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?auto=format&fit=crop&w=800&q=80",
+  biscuit:
+    "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=800&q=80",
+  "fruit-biscuit":
+    "https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?auto=format&fit=crop&w=800&q=80",
+  jaali:
+    "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80",
+  jar: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80",
+  "meetha-dish":
+    "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80",
+  gongura:
+    "https://images.unsplash.com/photo-1589135233689-d599981358c0?auto=format&fit=crop&w=800&q=80",
+  pickle:
+    "https://images.unsplash.com/photo-1589135233689-d599981358c0?auto=format&fit=crop&w=800&q=80",
+  barfi:
+    "https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?auto=format&fit=crop&w=800&q=80",
+  sohan:
+    "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=800&q=80",
+  halwa:
+    "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=800&q=80",
+  laddoo:
+    "https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?auto=format&fit=crop&w=800&q=80",
+  dodha:
+    "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80",
+  "dal-moth":
+    "https://images.unsplash.com/photo-1606491956689-2ea866880c84?auto=format&fit=crop&w=800&q=80",
+  mathri:
+    "https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&w=800&q=80",
+  pak: "https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?auto=format&fit=crop&w=800&q=80",
+  peda: "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=800&q=80",
+  chiroti:
+    "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80",
+  obbattu:
+    "https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&w=800&q=80",
+  peanuts:
+    "https://images.unsplash.com/photo-1606491956689-2ea866880c84?auto=format&fit=crop&w=800&q=80",
+  nippattu:
+    "https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&w=800&q=80",
+  murukku:
+    "https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&w=800&q=80",
+};
+
+/** Curated photography for origin cities and destination hubs */
+export const CITY_HERO_PHOTOS: Record<string, string> = {
+  kolkata:
+    "https://images.unsplash.com/photo-1558431382-27e303142255?auto=format&fit=crop&w=1200&q=80",
+  hyderabad:
+    "https://images.unsplash.com/photo-1605335198006-2c5e53303666?auto=format&fit=crop&w=1200&q=80",
+  "delhi-ncr":
+    "https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=1200&q=80",
+  bengaluru:
+    "https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&w=1200&q=80",
+};
+
+export function getDelicacyPhoto(art: string | null, imageUrl?: string | null): string | null {
+  if (imageUrl) return imageUrl;
+  if (art && FOOD_PHOTOS[art]) return FOOD_PHOTOS[art];
+  return null;
+}
+
 export function ItemArt({
   art,
   tempClass,
   label,
   className,
+  imageUrl,
 }: {
   art: string | null;
   tempClass: TempClass;
   label?: string;
   className?: string;
+  imageUrl?: string | null;
 }) {
+  const [photoFailed, setPhotoFailed] = useState(false);
+  const photo = !photoFailed ? getDelicacyPhoto(art, imageUrl) : null;
   const look = BACKDROP[tempClass];
   const id = `g-${tempClass}`;
+
+  if (photo) {
+    return (
+      <div className={cn("relative block h-full w-full overflow-hidden bg-surface", className)}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={photo}
+          alt={label ?? ""}
+          loading="lazy"
+          onError={() => setPhotoFailed(true)}
+          className="h-full w-full object-cover object-center transition-transform duration-500 ease-out will-change-transform group-hover:scale-105"
+        />
+        <div
+          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10"
+          aria-hidden="true"
+        />
+      </div>
+    );
+  }
+
   return (
     <svg
       viewBox="0 0 200 150"

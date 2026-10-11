@@ -1,13 +1,16 @@
 import type { Category, City, ItemCard } from "@food-del/domain/contracts";
-import { ArrowRight, BadgeCheck, ShieldCheck, Snowflake } from "lucide-react";
+import { BadgeCheck, ShieldCheck, Snowflake } from "lucide-react";
 import Link from "next/link";
-import { HeroPincode } from "@/components/hero-pincode";
+import { BengaluruNeighborhoodPicker } from "@/components/bengaluru-neighborhood-picker";
+import { TrendingInBengaluru, WeekendFeastBanner } from "@/components/bengaluru-social-proof";
+import { HometownHubs } from "@/components/hometown-hubs";
 import { HowItWorks } from "@/components/how-it-works";
 import { ItemArt } from "@/components/item-art";
 import { ItemGrid } from "@/components/item-card";
 import { ButtonLink, SectionHeading } from "@/components/ui/primitives";
+import { cn } from "@/lib/cn";
 
-const CITY_ART: Record<string, { art: string; temp: "AMBIENT" | "CHILLED" }> = {
+const _CITY_ART: Record<string, { art: string; temp: "AMBIENT" | "CHILLED" }> = {
   kolkata: { art: "sandesh", temp: "CHILLED" },
   hyderabad: { art: "biscuit", temp: "AMBIENT" },
   "delhi-ncr": { art: "halwa", temp: "AMBIENT" },
@@ -27,8 +30,8 @@ export function HomeView({
   categories,
   pincode,
 }: HomeData & { pincode?: string }) {
-  const origins = cities.filter((c) => c.isOrigin && c.launchStatus === "LIVE");
-  const destinations = cities
+  const _origins = cities.filter((c) => c.isOrigin && c.launchStatus === "LIVE");
+  const _destinations = cities
     .filter((c) => c.isDestination && c.launchStatus === "LIVE")
     .map((c) => c.name)
     .sort();
@@ -36,83 +39,94 @@ export function HomeView({
   return (
     <>
       <section className="paper-grain border-b border-line">
-        <div className="container-page grid items-center gap-10 py-12 md:grid-cols-[1.1fr_1fr] md:py-20">
+        <div className="container-page grid items-center gap-10 py-12 md:grid-cols-[1.2fr_0.9fr] md:py-16">
           <div>
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-jaggery">
-              Kolkata · Hyderabad · Old Delhi · Mysuru
-            </p>
-            <h1 className="text-4xl font-extrabold leading-[1.08] text-ink md:text-6xl">
-              The taste of another city, delivered fresh.
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-jaggery/30 bg-jaggery/10 px-3.5 py-1 text-xs font-bold uppercase tracking-[0.14em] text-jaggery">
+              <span>Bengaluru Tech Transplants · Taste of Home</span>
+            </div>
+            <h1 className="text-4xl font-extrabold leading-[1.08] text-ink md:text-5xl lg:text-6xl">
+              The taste of your hometown, delivered fresh to Bengaluru.
             </h1>
             <p className="mt-5 max-w-xl text-lg text-ink-soft">
-              Iconic sweets and specialities from the kitchens that made them famous — prepared for
-              your order and shipped cold-chain to arrive on the day you choose.
+              Iconic sweets and regional delicacies from the kitchens that made them famous in
+              Kolkata, Hyderabad, Old Delhi & Mysuru — prepared fresh to order and flown cold-chain
+              direct to your doorstep.
             </p>
-            <div className="mt-8 max-w-md">
-              <HeroPincode initial={pincode ?? null} destinations={destinations} />
+            <div className="mt-7 max-w-lg">
+              <BengaluruNeighborhoodPicker initialPincode={pincode ?? null} />
             </div>
           </div>
-          {/* A slim strip on phones keeps the city list near the top; a staggered grid on wider screens. */}
+
+          {/* Staggered visual display */}
           <div
-            className="relative mx-auto grid w-full grid-cols-4 gap-2 md:max-w-md md:grid-cols-2 md:gap-3"
+            className="relative mx-auto grid w-full grid-cols-2 gap-3 sm:max-w-md md:max-w-none md:gap-4"
             aria-hidden
           >
-            {["sandesh", "laddoo", "biscuit", "barfi"].map((art, i) => (
+            {[
+              {
+                art: "sandesh",
+                label: "Kolkata Nolen Gur Sandesh",
+                badge: "Kolkata · Chilled Air Cargo",
+              },
+              {
+                art: "biscuit",
+                label: "Hyderabad Osmania Biscuits",
+                badge: "Hyderabad · Freshly Baked",
+              },
+              { art: "halwa", label: "Old Delhi Sohan Halwa", badge: "Chandni Chowk · Pure Ghee" },
+              { art: "pak", label: "Mysore Pak", badge: "Karnataka · Country Butter" },
+            ].map((item, i) => (
               <div
-                key={art}
-                className={`overflow-hidden rounded-lg border border-line shadow-card md:rounded-xl ${i % 2 ? "md:translate-y-6" : ""}`}
+                key={item.art}
+                className={cn(
+                  "group relative overflow-hidden rounded-xl border border-line bg-card shadow-card transition-transform duration-300 hover:-translate-y-1",
+                  i % 2 ? "md:translate-y-6" : "",
+                )}
               >
                 <ItemArt
-                  art={art}
-                  tempClass={art === "sandesh" ? "CHILLED" : "AMBIENT"}
-                  className="aspect-square"
+                  art={item.art}
+                  tempClass={item.art === "sandesh" ? "CHILLED" : "AMBIENT"}
+                  className="aspect-[4/3]"
                 />
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-3 text-white">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-saffron">
+                    {item.badge}
+                  </p>
+                  <p className="text-xs font-bold truncate text-white">{item.label}</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="container-page py-12 md:py-14" aria-labelledby="origins">
-        <SectionHeading
-          id="origins"
-          eyebrow="Shop by city"
-          title="Where would you like to taste today?"
-        />
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {origins.map((c) => {
-            const look = CITY_ART[c.slug] ?? { art: "laddoo", temp: "AMBIENT" as const };
-            return (
-              <li key={c.id}>
-                <Link
-                  href={`/from/${c.slug}`}
-                  className="group flex h-full flex-col overflow-hidden rounded-lg border border-line bg-card transition-shadow hover:shadow-card"
-                >
-                  <div className="aspect-[16/9] overflow-hidden">
-                    <ItemArt
-                      art={look.art}
-                      tempClass={look.temp}
-                      className="transition-transform duration-300 group-hover:scale-[1.03]"
-                    />
-                  </div>
-                  <div className="flex flex-1 flex-col gap-1 p-4">
-                    <h3 className="text-xl font-bold">{c.name}</h3>
-                    <p className="text-sm text-ink-soft">{c.tagline}</p>
-                    <p className="mt-auto flex items-center gap-1 pt-2 text-sm font-semibold text-jaggery">
-                      {c.itemCount} delicacies{" "}
-                      <ArrowRight
-                        className="size-4 transition-transform group-hover:translate-x-0.5"
-                        aria-hidden
-                      />
-                    </p>
-                  </div>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+      {/* Hometown Hubs: The core emotional anchor for migrants */}
+      <HometownHubs cities={cities} items={featured} />
+
+      {/* Weekend Drop Banner */}
+      <section className="container-page py-6">
+        <WeekendFeastBanner />
       </section>
 
+      {/* Featured Delicacies */}
+      <section className="container-page py-12 md:py-14" aria-labelledby="featured">
+        <SectionHeading
+          id="featured"
+          eyebrow={pincode ? `Delivering to ${pincode}` : "Most loved"}
+          title="Delicacies people send home"
+          action={
+            <ButtonLink href="/search" variant="secondary" size="sm">
+              See all
+            </ButtonLink>
+          }
+        />
+        <ItemGrid items={featured.slice(0, 8)} />
+      </section>
+
+      {/* Trending in Bengaluru Social Proof */}
+      <TrendingInBengaluru />
+
+      {/* Craving Categories */}
       <section className="container-page pb-12" aria-labelledby="cravings">
         <SectionHeading
           id="cravings"
@@ -130,20 +144,6 @@ export function HomeView({
             </Link>
           ))}
         </nav>
-      </section>
-
-      <section className="container-page pb-14" aria-labelledby="featured">
-        <SectionHeading
-          id="featured"
-          eyebrow={pincode ? `Delivering to ${pincode}` : "Most loved"}
-          title="Delicacies people send home"
-          action={
-            <ButtonLink href="/search" variant="secondary" size="sm">
-              See all
-            </ButtonLink>
-          }
-        />
-        <ItemGrid items={featured} />
       </section>
 
       <section className="border-y border-line bg-paper-deep">

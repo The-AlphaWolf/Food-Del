@@ -68,7 +68,7 @@ export function HomeDemo() {
   const q = useDemoData(["home"], async (pincode) => {
     const [cities, featured, categories] = await Promise.all([
       api.cities(),
-      api.items({ featured: "true", pincode, limit: 8 }),
+      api.items({ featured: "true", pincode, limit: 24 }),
       api.categories(),
     ]);
     return { cities, featured, categories };

@@ -65,8 +65,9 @@ export function DelicacyView({
         <div className="overflow-hidden rounded-xl border border-line lg:col-start-1 lg:row-start-1">
           <ItemArt
             art={item.artKey}
+            imageUrl={item.imageUrl}
             tempClass={item.tempClass}
-            label={`Illustration of ${item.name}`}
+            label={`Photograph of ${item.name}`}
             className="aspect-[4/3]"
           />
         </div>

@@ -37,6 +37,7 @@ export function ItemCard({
       >
         <ItemArt
           art={item.artKey}
+          imageUrl={item.imageUrl}
           tempClass={item.tempClass}
           className="transition-transform duration-300 group-hover:scale-[1.03]"
         />

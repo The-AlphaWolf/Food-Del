@@ -13,7 +13,7 @@ export default async function HomePage() {
   const pincode = await currentPincode();
   const [cities, featured, categories] = await Promise.all([
     core.catalog.listCities(),
-    core.catalog.listItems({ featured: "true", pincode, limit: 8 }),
+    core.catalog.listItems({ featured: "true", pincode, limit: 24 }),
     core.catalog.listCategories(),
   ]);
   return <HomeView cities={cities} featured={featured} categories={categories} pincode={pincode} />;
